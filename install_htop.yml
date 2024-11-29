@@ -3,4 +3,6 @@
   - install_htop
 
 
-  
+- hosts: node
+  roles:
+  - install_htop

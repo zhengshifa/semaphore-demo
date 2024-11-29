@@ -1,2 +1,7 @@
 [site]
 localhost ansible_connection=local
+
+[node]
+192.168.137.11
+192.168.137.12
+192.168.137.13
