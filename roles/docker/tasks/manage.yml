@@ -1,0 +1,16 @@
+- name: Pull Docker images
+  ansible.builtin.docker_image:
+    name: "{{ item }}"
+    source: pull
+  with_items: "{{ docker_images }}"
+  when: docker_images | length > 0
+
+- name: Manage Docker containers
+  ansible.builtin.docker_container:
+    name: "{{ item.name }}"
+    image: "{{ item.image }}"
+    state: "{{ item.state | default('started') }}"
+    ports: "{{ item.ports | default([]) }}"
+    env: "{{ item.env | default({}) }}"
+    volumes: "{{ item.volumes | default([]) }}"
+  with_items: "{{ docker_containers }}"
