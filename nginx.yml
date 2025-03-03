@@ -1,0 +1,6 @@
+---
+- name: Nginx管理
+  hosts: nginx_servers
+  become: yes
+  roles:
+    - nginx-mng

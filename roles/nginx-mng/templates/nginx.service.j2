@@ -1,0 +1,16 @@
+[Unit]
+Description=The NGINX HTTP and reverse proxy server
+After=network.target
+
+[Service]
+Type=forking
+PIDFile={{ install_path }}/nginx.pid
+ExecStart={{ install_path }}/sbin/nginx -c {{ nginx_checksum }}/conf/nginx.conf
+ExecReload={{ install_path }}/sbin/nginx -s reload -c {{ nginx_checksum }}/conf/nginx.conf
+ExecStop={{ install_path }}/sbin/nginx -s quit -c {{ nginx_checksum }}/conf/nginx.conf
+PrivateTmp=true
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

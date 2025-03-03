@@ -1,0 +1,47 @@
+---
+- name: 下载Nginx二进制包
+  get_url:
+    url: "http://nginx.org/download/nginx-{{ nginx_version }}.tar.gz"
+    dest: "/tmp/nginx-{{ nginx_version }}.tar.gz"
+
+- name: 解压源码
+  ansible.builtin.unarchive:
+    src: "/tmp/nginx-{{ nginx_version }}.tar.gz"
+    dest: "/tmp/"
+    remote_src: yes
+    creates: "/tmp/nginx-{{ nginx_version }}/Makefile"
+
+- name: 编译安装
+  community.general.make:
+    chdir: "/tmp/nginx-{{ nginx_version }}"
+    target: install
+    params:
+      prefix: "{{ install_path }}"
+    creates: "{{ install_path }}/sbin/nginx"
+  
+- name: 清理临时文件
+  file:
+    path: "/tmp/nginx-{{ nginx_version }}"
+    state: absent
+
+- name: 创建或者更新Nginx配置
+  copy:
+    src: "files/{{ ansible_hostname }}.conf"
+    dest: {{ install_path }}/conf/nginx.conf
+  notify: 重启Nginx
+
+- name: 部署systemd服务文件
+  template:
+    src: nginx.service.j2
+    dest: /etc/systemd/system/nginx.service
+  notify: 重启Nginx
+
+- name: 重新加载systemd配置
+  systemd:
+    daemon_reload: yes
+
+- name: 确保Nginx服务已启动
+  service:
+    name: nginx
+    state: started
+    enabled: yes

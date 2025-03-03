@@ -5,3 +5,16 @@ localhost ansible_connection=local
 192.168.137.11 ansible_user=root ansible_password=root
 192.168.137.12 ansible_user=root ansible_password=root
 192.168.137.13 ansible_user=root ansible_password=root
+
+
+
+[nginx_servers]
+web1 ansible_host=192.168.1.101
+web2 ansible_host=192.168.1.102
+
+
+[nginx_servers:vars]
+ansible_user=admin
+ansible_ssh_private_key_file=~/.ssh/nginx_deploy
+nginx_version=1.24.0
+install_path=/usr/local/nginx
