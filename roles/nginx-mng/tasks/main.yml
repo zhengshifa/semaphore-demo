@@ -27,7 +27,7 @@
 - name: 创建或者更新Nginx配置
   copy:
     src: "files/{{ ansible_hostname }}.conf"
-    dest: {{ install_path }}/conf/nginx.conf
+    dest: "{{ install_path }}/conf/nginx.conf"
   notify: 重启Nginx
 
 - name: 部署systemd服务文件
@@ -36,6 +36,7 @@
     dest: /etc/systemd/system/nginx.service
   notify: 重启Nginx
 
+- name: 重载systemd守护进程
   systemd:
     daemon_reload: yes
 
