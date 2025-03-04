@@ -3,4 +3,4 @@
   hosts: nginx_servers
   become: yes
   roles:
-    - nginx-mng
+  - ../roles/nginx-mng

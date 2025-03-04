@@ -1,3 +1,3 @@
 - hosts: node
   roles:
-  - install_htop
+  - ../roles/install_htop
