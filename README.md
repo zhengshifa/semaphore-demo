@@ -14,3 +14,6 @@ docker run -p 3000:3000 --name semaphore \
 	-e SEMAPHORE_ADMIN_NAME=Admin \
 	-e SEMAPHORE_ADMIN_EMAIL=admin@localhost \
 	-d semaphoreui/semaphore:latest
+
+
+ansible-playbook -i invs/dev/hosts -e invs/dev/hosts.yml  playbooks/nginx.yml

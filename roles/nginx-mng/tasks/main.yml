@@ -36,7 +36,6 @@
     dest: /etc/systemd/system/nginx.service
   notify: 重启Nginx
 
-- name: 重新加载systemd配置
   systemd:
     daemon_reload: yes
 
