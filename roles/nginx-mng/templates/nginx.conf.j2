@@ -1,0 +1,37 @@
+user  nginx;
+worker_processes  {{ ansible_processor_vcpus }};
+
+error_log  logs/error.log notice;
+pid        logs/nginx.pid;
+
+events {
+    worker_connections  {{ nginx_worker_connections }};
+}
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    sendfile        on;
+    keepalive_timeout  {{ keepalive_timeout }};
+    
+    gzip  on;
+    gzip_comp_level  {{ gzip_comp_level }};
+
+    server {
+        listen       80;
+        server_name  {{ inventory_hostname_short }};
+
+        access_log  logs/access.log;
+
+        location / {
+            root   html;
+            index  index.html index.htm;
+        }
+
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   html;
+        }
+    }
+}

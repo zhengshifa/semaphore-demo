@@ -16,4 +16,4 @@ docker run -p 3000:3000 --name semaphore \
 	-d semaphoreui/semaphore:latest
 
 
-ansible-playbook -i invs/dev/hosts -e invs/dev/hosts.yml  playbooks/nginx.yml
+ansible-playbook -i invs/dev/hosts playbooks/nginx-install.yml

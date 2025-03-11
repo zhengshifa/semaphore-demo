@@ -1,0 +1,15 @@
+---
+- name: 创建nginx用户和组
+  ansible.builtin.user:
+    name: nginx
+    system: yes
+    create_home: no
+    shell: /sbin/nologin
+
+- name: 创建安装目录
+  ansible.builtin.file:
+    path: "{{ nginx_install_dir }}"
+    state: directory
+    owner: nginx
+    group: nginx
+    mode: '0755'

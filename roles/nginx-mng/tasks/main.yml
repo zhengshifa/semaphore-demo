@@ -1,47 +1,36 @@
 ---
-- name: 下载Nginx二进制包
-  get_url:
-    url: "http://nginx.org/download/nginx-{{ nginx_version }}.tar.gz"
-    dest: "/tmp/nginx-{{ nginx_version }}.tar.gz"
+# 执行回滚操作（如果启用）
+- name: 回滚Nginx到之前版本
+  ansible.builtin.include_tasks: rollback_nginx.yml
+  when: nginx_rollback | bool
+  tags: [nginx, rollback]
 
-- name: 解压源码
-  ansible.builtin.unarchive:
-    src: "/tmp/nginx-{{ nginx_version }}.tar.gz"
-    dest: "/tmp/"
-    remote_src: yes
-    creates: "/tmp/nginx-{{ nginx_version }}/Makefile"
+# 执行升级操作（如果启用）
+- name: 升级Nginx到新版本
+  ansible.builtin.include_tasks: upgrade_nginx.yml
+  when: nginx_upgrade | bool
+  tags: [nginx, upgrade]
 
-- name: 编译安装
-  community.general.make:
-    chdir: "/tmp/nginx-{{ nginx_version }}"
-    target: install
-    params:
-      prefix: "{{ install_path }}"
-    creates: "{{ install_path }}/sbin/nginx"
+# 如果不是升级或回滚，则执行标准安装流程
+- block:
+  - name: 安装依赖包
+    ansible.builtin.include_tasks: install_dependencies.yml
+
+  - name: 用户和目录配置
+    ansible.builtin.include_tasks: user_setup.yml
+
+  - name: 编译安装Nginx
+    ansible.builtin.include_tasks: compile_install.yml
+
+  - name: 服务配置
+    ansible.builtin.include_tasks: service_setup.yml
   
-- name: 清理临时文件
-  file:
-    path: "/tmp/nginx-{{ nginx_version }}"
-    state: absent
-
-- name: 创建或者更新Nginx配置
-  copy:
-    src: "files/{{ ansible_hostname }}.conf"
-    dest: "{{ install_path }}/conf/nginx.conf"
-  notify: 重启Nginx
-
-- name: 部署systemd服务文件
-  template:
-    src: nginx.service.j2
-    dest: /etc/systemd/system/nginx.service
-  notify: 重启Nginx
-
-- name: 重载systemd守护进程
-  systemd:
-    daemon_reload: yes
-
-- name: 确保Nginx服务已启动
-  service:
-    name: nginx
-    state: started
-    enabled: yes
+  - name: 记录当前版本
+    ansible.builtin.copy:
+      content: "{{ nginx_version_check.stderr | regex_replace('^.*/', '') | regex_replace('\\n','') }}"
+      dest: "{{ nginx_install_dir }}/{{ inventory_hostname }}/current_version"
+      owner: nginx
+      group: nginx
+      mode: '0644'
+  when: not (nginx_upgrade | bool) and not (nginx_rollback | bool)
+  tags: [nginx, install]

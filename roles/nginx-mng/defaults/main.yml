@@ -1,0 +1,9 @@
+---
+nginx_version: "1.25.3"
+nginx_install_dir: "/usr/local/nginx"
+
+# 升级相关配置
+nginx_current_version: "{{ lookup('file', nginx_install_dir + '/' + inventory_hostname + '/current_version') | trim }}"  # 自动获取当前版本
+nginx_new_version: "1.25.4"                   # 要升级到的Nginx版本
+nginx_upgrade: false                          # 是否执行升级操作
+nginx_rollback: false                         # 是否执行回滚操作

@@ -1,0 +1,55 @@
+---
+- name: 检查主机专用配置模板
+  ansible.builtin.stat:
+    path: "{{ role_path }}/templates/{{ inventory_hostname }}-nginx.conf.j2"
+  register: host_specific_template
+
+- block:
+  - name: 部署主机专用nginx配置
+    ansible.builtin.template:
+      src: "{{ inventory_hostname }}-nginx.conf.j2"
+      dest: "{{ nginx_install_dir }}/{{ inventory_hostname }}/conf/nginx.conf"
+      owner: nginx
+      group: nginx
+      mode: '0644'
+    notify: restart nginx
+
+  when: host_specific_template.stat.exists
+
+- block:  
+  - name: 部署默认nginx配置
+    ansible.builtin.template:
+      src: nginx.conf.j2
+      dest: "{{ nginx_install_dir }}/{{ inventory_hostname }}/conf/nginx.conf"
+      owner: nginx
+      group: nginx
+      mode: '0644'
+    notify: restart nginx
+
+  when: not host_specific_template.stat.exists
+
+- name: 创建实例配置目录
+  ansible.builtin.file:
+    path: "{{ nginx_install_dir }}/{{ inventory_hostname }}/conf"
+    state: directory
+    owner: nginx
+    group: nginx
+    mode: '0755'
+
+- name: 部署实例nginx配置
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: "{{ nginx_install_dir }}/{{ inventory_hostname }}/conf/nginx.conf"
+    owner: nginx
+    group: nginx
+    mode: '0644'
+  notify: restart nginx
+
+- name: 部署实例化systemd服务
+  ansible.builtin.template:
+    src: nginx.service.j2
+    dest: "/etc/systemd/system/nginx@{{ inventory_hostname }}.service"
+    owner: nginx
+    group: nginx
+    mode: '0644'
+  notify: reload systemd

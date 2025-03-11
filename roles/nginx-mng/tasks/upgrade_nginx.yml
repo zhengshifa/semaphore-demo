@@ -1,0 +1,77 @@
+---
+- name: 验证升级版本
+  ansible.builtin.assert:
+    that:
+      - nginx_new_version is version(nginx_current_version, '>')
+      - nginx_new_version matches '^\\d+\\.\\d+\\.\\d+$'
+    fail_msg: |-
+      版本校验失败：
+      - 新版本格式必须为X.Y.Z (当前: {{ nginx_current_version }})
+      - 必须高于当前版本 (尝试版本: {{ nginx_new_version }})
+      - 如需降级请使用回滚功能
+    success_msg: "版本校验通过 ({{ nginx_current_version }} → {{ nginx_new_version }})"
+
+- name: 创建备份目录
+  ansible.builtin.file:
+    path: "{{ nginx_install_dir }}/backups"
+    state: directory
+    owner: nginx
+    group: nginx
+    mode: '0755'
+
+- name: 获取当前日期时间
+  ansible.builtin.set_fact:
+    backup_timestamp: "{{ ansible_date_time.iso8601 | regex_replace(':', '-') }}"
+
+- name: 备份当前Nginx安装
+  ansible.builtin.command:
+    cmd: cp -r {{ nginx_install_dir }}/{{ inventory_hostname }} {{ nginx_install_dir }}/backups/nginx-{{ nginx_current_version }}-{{ backup_timestamp }}
+  register: backup_result
+  changed_when: backup_result.rc == 0
+
+- name: 记录备份信息
+  ansible.builtin.copy:
+    content: |
+      version: {{ nginx_current_version }}
+      backup_path: {{ nginx_install_dir }}/backups/nginx-{{ nginx_current_version }}-{{ backup_timestamp }}
+      timestamp: {{ backup_timestamp }}
+    dest: "{{ nginx_install_dir }}/backups/last_backup.yml"
+    owner: nginx
+    group: nginx
+    mode: '0644'
+
+- name: 下载新版本Nginx二进制包
+  ansible.builtin.unarchive:
+    src: https://nginx.org/download/nginx-{{ nginx_new_version }}.tar.gz
+    dest: /tmp
+    remote_src: yes
+
+- name: 编译安装新版本Nginx
+  ansible.builtin.command:
+    chdir: /tmp/nginx-{{ nginx_new_version }}
+    cmd: |
+      ./configure --prefix={{ nginx_install_dir }}/{{ inventory_hostname }} \
+                  --user=nginx \
+                  --group=nginx \
+                  --with-http_ssl_module \
+                  --with-http_stub_status_module \
+                  --with-stream \
+                  --with-threads
+      make
+      make install
+  register: upgrade_result
+  failed_when: upgrade_result.rc != 0
+
+- name: 更新当前版本记录
+  ansible.builtin.copy:
+    content: "{{ nginx_new_version }}"
+    dest: "{{ nginx_install_dir }}/{{ inventory_hostname }}/current_version"
+    owner: nginx
+    group: nginx
+    mode: '0644'
+
+- name: 重启Nginx服务
+  ansible.builtin.systemd:
+    name: nginx
+    state: restarted
+    daemon_reload: yes

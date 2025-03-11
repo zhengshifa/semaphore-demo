@@ -1,16 +1,18 @@
 [Unit]
-Description=The NGINX HTTP and reverse proxy server
+Description=Nginx Service Instance {{ inventory_hostname }}
 After=network.target
 
 [Service]
 Type=forking
-PIDFile={{ install_path }}/nginx.pid
-ExecStart={{ install_path }}/sbin/nginx -c {{ nginx_checksum }}/conf/nginx.conf
-ExecReload={{ install_path }}/sbin/nginx -s reload -c {{ nginx_checksum }}/conf/nginx.conf
-ExecStop={{ install_path }}/sbin/nginx -s quit -c {{ nginx_checksum }}/conf/nginx.conf
+PIDFile={{ nginx_install_dir }}/{{ inventory_hostname }}/logs/nginx.pid
+ExecStartPre={{ nginx_install_dir }}/{{ inventory_hostname }}/sbin/nginx -t -c {{ nginx_install_dir }}/{{ inventory_hostname }}/conf/nginx.conf
+ExecStart={{ nginx_install_dir }}/{{ inventory_hostname }}/sbin/nginx -c {{ nginx_install_dir }}/{{ inventory_hostname }}/conf/nginx.conf
+ExecReload={{ nginx_install_dir }}/{{ inventory_hostname }}/sbin/nginx -s reload -c {{ nginx_install_dir }}/{{ inventory_hostname }}/conf/nginx.conf
+ExecStop=/bin/kill -s QUIT $MAINPID
 PrivateTmp=true
-Restart=on-failure
-RestartSec=5
+User=nginx
+Group=nginx
+EnvironmentFile=-/etc/sysconfig/nginx@%i
 
 [Install]
 WantedBy=multi-user.target
