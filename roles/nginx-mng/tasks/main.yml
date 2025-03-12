@@ -1,4 +1,11 @@
 ---
+- name: 创建nginx用户和组
+  ansible.builtin.user:
+    name: nginx
+    system: yes
+    create_home: no
+    shell: /sbin/nologin
+
 # 执行回滚操作（如果启用）
 - name: 回滚Nginx到之前版本
   ansible.builtin.include_tasks: rollback_nginx.yml
@@ -16,9 +23,6 @@
   - name: 安装依赖包
     ansible.builtin.include_tasks: install_dependencies.yml
 
-  - name: 用户和目录配置
-    ansible.builtin.include_tasks: user_setup.yml
-
   - name: 编译安装Nginx
     ansible.builtin.include_tasks: compile_install.yml
 
@@ -34,3 +38,11 @@
       mode: '0644'
   when: not (nginx_upgrade | bool) and not (nginx_rollback | bool)
   tags: [nginx, install]
+
+- name: 安装目录属主和属组调整
+  become: yes  # 如果需要提升权限
+  file:
+    path: "{{ nginx_install_dir }}" # 替换为你要修改的目录路径
+    owner: nginx  # 替换为新的属主
+    group: nginx  # 替换为新的属组
+    recurse: yes  # 递归地修改目录及其子目录和文件的属主和属组

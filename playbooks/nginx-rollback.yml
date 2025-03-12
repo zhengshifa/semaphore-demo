@@ -1,8 +1,0 @@
----
-- name: Nginx回滚示例
-  hosts: all
-  become: yes
-  vars:
-    nginx_rollback: true
-  roles:
-    - nginx-mng

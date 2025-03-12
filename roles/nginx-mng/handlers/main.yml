@@ -5,6 +5,6 @@
 
 - name: restart nginx
   ansible.builtin.systemd:
-    name: nginx
+    name: nginx@{{ inventory_hostname }}
     state: restarted
     enabled: yes

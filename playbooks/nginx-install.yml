@@ -1,6 +1,0 @@
----
-- name: Nginx安装或者更新配置
-  hosts: nginx_servers
-  become: yes
-  roles:
-    - nginx-mng
