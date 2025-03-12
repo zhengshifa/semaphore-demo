@@ -13,10 +13,14 @@ web2 ansible_host=192.168.1.101
 web3 ansible_host=192.168.1.102
 
 [nginx_servers:vars]
-ansible_user=admin
-ansible_ssh_private_key_file=~/.ssh/nginx_deploy
+#ansible_user=admin
+#ansible_ssh_private_key_file=~/.ssh/nginx_deploy
+ansible_processor_vcpus=1
+nginx_worker_connections=1024
+keepalive_timeout=60
+gzip_comp_level=3
 nginx_version=1.24.0
-install_path=/usr/local/nginx
+nginx_install_dir=/usr/local/nginx
 
 
 [mysql_servers]

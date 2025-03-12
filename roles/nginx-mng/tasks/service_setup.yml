@@ -1,13 +1,13 @@
 ---
 - name: 检查主机专用配置模板
   ansible.builtin.stat:
-    path: "{{ role_path }}/templates/{{ inventory_hostname }}-nginx.conf.j2"
+    path: "nginx-mng/templates/{{ inventory_hostname }}-nginx.conf.j2"
   register: host_specific_template
 
 - block:
   - name: 部署主机专用nginx配置
     ansible.builtin.template:
-      src: "{{ inventory_hostname }}-nginx.conf.j2"
+      src: "nginx-mng/templates/{{ inventory_hostname }}-nginx.conf.j2"
       dest: "{{ nginx_install_dir }}/{{ inventory_hostname }}/conf/nginx.conf"
       owner: nginx
       group: nginx
@@ -19,7 +19,7 @@
 - block:  
   - name: 部署默认nginx配置
     ansible.builtin.template:
-      src: nginx.conf.j2
+      src: nginx-mng/templates/nginx.conf.j2
       dest: "{{ nginx_install_dir }}/{{ inventory_hostname }}/conf/nginx.conf"
       owner: nginx
       group: nginx
@@ -38,7 +38,7 @@
 
 - name: 部署实例nginx配置
   ansible.builtin.template:
-    src: nginx.conf.j2
+    src: nginx-mng/templates/nginx.conf.j2
     dest: "{{ nginx_install_dir }}/{{ inventory_hostname }}/conf/nginx.conf"
     owner: nginx
     group: nginx
@@ -47,7 +47,7 @@
 
 - name: 部署实例化systemd服务
   ansible.builtin.template:
-    src: nginx.service.j2
+    src: nginx-mng/templates/nginx.service.j2
     dest: "/etc/systemd/system/nginx@{{ inventory_hostname }}.service"
     owner: nginx
     group: nginx

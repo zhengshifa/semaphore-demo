@@ -1,24 +1,32 @@
----
+- name: 检查Nginx是否已经安装
+  ansible.builtin.command:
+    cmd: "{{ nginx_install_dir }}/{{ inventory_hostname }}/sbin/nginx -v"
+  register: nginx_installed
+  ignore_errors: yes
+  changed_when: false
+
 - name: 下载Nginx二进制包
   ansible.builtin.unarchive:
     src: https://nginx.org/download/nginx-{{ nginx_version }}.tar.gz
     dest: /tmp
     remote_src: yes
+  when: nginx_installed.rc != 0
 
 - name: 编译安装Nginx
-  ansible.builtin.command:
+  ansible.builtin.shell: |
+    ./configure --prefix={{ nginx_install_dir }}/{{ inventory_hostname }} \
+                --user=nginx \
+                --group=nginx \
+                --with-http_ssl_module \
+                --with-http_stub_status_module \
+                --with-stream \
+                --with-threads &&
+    make &&
+    make install
+  args:
     chdir: /tmp/nginx-{{ nginx_version }}
-    cmd: |
-      ./configure --prefix={{ nginx_install_dir }}/{{ inventory_hostname }} \
-                  --user=nginx \
-                  --group=nginx \
-                  --with-http_ssl_module \
-                  --with-http_stub_status_module \
-                  --with-stream \
-                  --with-threads
-      make
-      make install
   register: install_result
+  when: nginx_installed.rc != 0
 
 - name: 获取实际安装版本
   ansible.builtin.command:

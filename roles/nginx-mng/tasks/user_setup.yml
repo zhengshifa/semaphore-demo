@@ -6,7 +6,7 @@
     create_home: no
     shell: /sbin/nologin
 
-- name: 创建安装目录
+- name: create nginx install dir
   ansible.builtin.file:
     path: "{{ nginx_install_dir }}"
     state: directory

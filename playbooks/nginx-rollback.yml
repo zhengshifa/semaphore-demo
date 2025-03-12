@@ -5,4 +5,4 @@
   vars:
     nginx_rollback: true
   roles:
-    - ../nginx-mng
+    - nginx-mng

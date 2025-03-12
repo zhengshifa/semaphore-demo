@@ -6,4 +6,4 @@
     nginx_upgrade: true
     nginx_new_version: "1.25.4"      # 要升级到的版本
   roles:
-    - ../nginx-mng
+    - nginx-mng

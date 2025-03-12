@@ -1,11 +1,18 @@
 ---
-- name: 安装编译依赖
-  ansible.builtin.package:
+- name: 启用EPEL软件源
+  ansible.builtin.yum:
+    name: epel-release
+    state: present
+
+- name: 安装编译依赖项
+  ansible.builtin.yum:
     name:
-      - wget
       - gcc
       - make
+      - openssl-devel
       - pcre-devel
       - zlib-devel
-      - openssl-devel
+      - glibc-devel
+      - kernel-headers
+      - libxcrypt-devel  # 根据系统版本调整包名称
     state: present
