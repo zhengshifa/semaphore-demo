@@ -27,10 +27,3 @@
     chdir: /tmp/nginx-{{ nginx_version }}
   register: install_result
   when: nginx_installed.rc != 0
-
-- name: 获取实际安装版本
-  ansible.builtin.command:
-    cmd: "{{ nginx_install_dir }}/{{ inventory_hostname }}/sbin/nginx -v"
-  register: nginx_version_check
-  changed_when: false
-  failed_when: nginx_version_check.rc != 0

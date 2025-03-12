@@ -3,7 +3,7 @@
   hosts: nginx_servers
   become: yes
   vars:
-    nginx_upgrade: true
+    nginx_upgrade: false
     nginx_new_version: "1.25.4"      # 要升级到的版本
     nginx_rollback: false
   roles:

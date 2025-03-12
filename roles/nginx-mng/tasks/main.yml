@@ -9,13 +9,13 @@
 # 执行回滚操作（如果启用）
 - name: 回滚Nginx到之前版本
   ansible.builtin.include_tasks: rollback_nginx.yml
-  when: nginx_rollback | bool
+  when: (nginx_rollback | bool) and not (nginx_upgrade | bool)
   tags: [nginx, rollback]
 
 # 执行升级操作（如果启用）
 - name: 升级Nginx到新版本
   ansible.builtin.include_tasks: upgrade_nginx.yml
-  when: nginx_upgrade | bool
+  when: (nginx_upgrade | bool) and not (nginx_rollback | bool)
   tags: [nginx, upgrade]
 
 # 如果不是升级或回滚，则执行标准安装流程
@@ -27,11 +27,11 @@
     ansible.builtin.include_tasks: compile_install.yml
 
   - name: 服务配置
-    ansible.builtin.include_tasks: service_setup.yml
+    ansible.builtin.include_tasks: conf_setup.yml
   
-  - name: 记录当前版本
+  - name: 更新当前版本记录
     ansible.builtin.copy:
-      content: "{{ nginx_version_check.stderr | regex_replace('^.*/', '') | regex_replace('\\n','') }}"
+      content: "{{ nginx_version }}"
       dest: "{{ nginx_install_dir }}/{{ inventory_hostname }}/current_version"
       owner: nginx
       group: nginx

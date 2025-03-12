@@ -11,7 +11,8 @@ ExecReload={{ nginx_install_dir }}/{{ inventory_hostname }}/sbin/nginx -s reload
 ExecStop=/bin/kill -s QUIT $MAINPID
 PrivateTmp=true
 User=nginx
-Group=nginx
+Group=
+AmbientCapabilities=CAP_NET_BIND_SERVICE
 EnvironmentFile=-/etc/sysconfig/nginx@%i
 
 [Install]

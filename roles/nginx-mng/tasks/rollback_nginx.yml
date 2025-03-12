@@ -10,32 +10,6 @@
     name: nginx_backup
   when: backup_info_file.stat.exists
 
-- name: 验证回滚版本差异
-  ansible.builtin.assert:
-    that:
-      - nginx_backup.version is version(nginx_current_version, '<')
-      - nginx_backup.version matches '^\\d+\\.\\d+\\.\\d+$'
-    fail_msg: |-
-      回滚版本校验失败：
-      - 备份版本格式必须为X.Y.Z (当前: {{ nginx_current_version }})
-      - 必须低于当前版本 (备份版本: {{ nginx_backup.version }})
-      - 如需升级请使用标准流程
-    success_msg: "版本差异验证通过 ({{ nginx_current_version }} → {{ nginx_backup.version }})"
-  when: backup_info_file.stat.exists
-
-- name: 验证回滚版本差异
-  ansible.builtin.assert:
-    that: nginx_backup.version != nginx_current_version
-    fail_msg: "备份版本 {{ nginx_backup.version }} 与当前版本 {{ nginx_current_version }} 相同，无需回滚"
-    success_msg: "版本差异验证通过，开始回滚流程"
-  when: backup_info_file.stat.exists
-
-- name: 停止Nginx服务
-  ansible.builtin.systemd:
-    name: nginx
-    state: stopped
-  when: backup_info_file.stat.exists
-
 - name: 备份当前版本（回滚前）
   ansible.builtin.command:
     cmd: cp -r {{ nginx_install_dir }}/{{ inventory_hostname }} {{ nginx_install_dir }}/backups/pre-rollback-{{ ansible_date_time.iso8601 | regex_replace(':', '-') }}
@@ -49,6 +23,8 @@
   register: rollback_result
   changed_when: rollback_result.rc == 0
   when: backup_info_file.stat.exists
+  notify:
+    - restart nginx
 
 - name: 更新当前版本记录
   ansible.builtin.copy:
@@ -59,14 +35,7 @@
     mode: '0644'
   when: backup_info_file.stat.exists
 
-- name: 启动Nginx服务
-  ansible.builtin.systemd:
-    name: nginx
-    state: started
-    daemon_reload: yes
-  when: backup_info_file.stat.exists
-
 - name: 回滚失败提示
   ansible.builtin.fail:
     msg: "没有找到Nginx备份信息，无法执行回滚操作。请确保之前已经执行过升级操作。"
-  when: not backup_info_file.stat.exists
+  when: not backup_info_file.stat.exists恢复之前的Nginx版本
