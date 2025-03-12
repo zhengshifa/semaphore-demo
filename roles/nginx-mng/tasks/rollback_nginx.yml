@@ -12,7 +12,7 @@
 
 - name: 备份当前版本（回滚前）
   ansible.builtin.command:
-    cmd: cp -r {{ nginx_install_dir }}/{{ inventory_hostname }} {{ nginx_install_dir }}/backups/pre-rollback-{{ ansible_date_time.iso8601 | regex_replace(':', '-') }}
+    cmd: cp -r {{ nginx_install_dir }}/{{ inventory_hostname }} {{ nginx_install_dir }}/backups/pre-rollback-{{ inventory_hostname }}-{{ ansible_date_time.iso8601 | regex_replace(':', '-') }}
   register: pre_rollback_backup
   changed_when: pre_rollback_backup.rc == 0
   when: backup_info_file.stat.exists

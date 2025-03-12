@@ -28,7 +28,7 @@
 
 - name: 备份当前Nginx安装
   ansible.builtin.command:
-    cmd: cp -r {{ nginx_install_dir }}/{{ inventory_hostname }} {{ nginx_install_dir }}/backups/nginx-{{ nginx_current_version }}-{{ backup_timestamp }}
+    cmd: cp -r {{ nginx_install_dir }}/{{ inventory_hostname }} {{ nginx_install_dir }}/backups/nginx-{{ inventory_hostname }}-{{ nginx_current_version }}-{{ backup_timestamp }}
   register: backup_result
   changed_when: backup_result.rc == 0
 
@@ -36,7 +36,7 @@
   ansible.builtin.copy:
     content: |
       version: {{ nginx_current_version }}
-      backup_path: {{ nginx_install_dir }}/backups/nginx-{{ nginx_current_version }}-{{ backup_timestamp }}
+      backup_path: {{ nginx_install_dir }}/backups/nginx-{{ inventory_hostname }}-{{ nginx_current_version }}-{{ backup_timestamp }}
       timestamp: {{ backup_timestamp }}
     dest: "{{ nginx_install_dir }}/backups/last_backup.yml"
     owner: nginx
