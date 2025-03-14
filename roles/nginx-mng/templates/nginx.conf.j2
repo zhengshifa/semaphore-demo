@@ -1,37 +1,39 @@
-user  nginx;
-worker_processes  {{ ansible_processor_vcpus }};
-
-error_log  logs/error.log notice;
-pid        logs/nginx.pid;
+# nginx-mng/templates/nginx.conf.j2
+user {{ nginx_user }} {{ nginx_group }};
+worker_processes auto;
+pid {{ nginx_pid_path }};
 
 events {
-    worker_connections  {{ nginx_worker_connections }};
+    worker_connections 1024;
+    multi_accept on;
+    use epoll;
 }
 
 http {
     include       mime.types;
     default_type  application/octet-stream;
 
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  {{ nginx_log_path }}/access.log  main;
+    error_log   {{ nginx_log_path }}/error.log warn;
+
     sendfile        on;
-    keepalive_timeout  {{ keepalive_timeout }};
-    
+    tcp_nopush      on;
+    tcp_nodelay     on;
+    server_tokens   off;
+
+    keepalive_timeout  65;
+    client_max_body_size 64m;
+
     gzip  on;
-    gzip_comp_level  {{ gzip_comp_level }};
+    gzip_disable "msie6";
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_types text/plain text/css application/javascript application/json application/x-javascript text/xml application/xml application/rss+xml text/javascript image/svg+xml application/vnd.ms-fontobject application/x-font-ttf font/opentype;
 
-    server {
-        listen       80;
-        server_name  {{ inventory_hostname_short }};
-
-        access_log  logs/access.log;
-
-        location / {
-            root   html;
-            index  index.html index.htm;
-        }
-
-        error_page   500 502 503 504  /50x.html;
-        location = /50x.html {
-            root   html;
-        }
-    }
+    include {{ nginx_conf_path }}/conf.d/*.conf;
 }

@@ -1,37 +1,20 @@
-user  nginx;
-worker_processes  {{ ansible_processor_vcpus }};
+# nginx-mng/templates/web1-nginx.conf.j2
+server {
+    listen 8080;
+    server_name {{ inventory_hostname }};
+    root /var/www/web1;
 
-error_log  logs/error.log notice;
-pid        logs/nginx.pid;
+    access_log {{ nginx_log_path }}/access.log main;
+    error_log  {{ nginx_log_path }}/error.log;
 
-events {
-    worker_connections  {{ nginx_worker_connections }};
-}
+    location / {
+        try_files $uri $uri/ =404;
+        index index.html index.htm;
+    }
 
-http {
-    include       mime.types;
-    default_type  application/octet-stream;
-
-    sendfile        on;
-    keepalive_timeout  {{ keepalive_timeout }};
-    
-    gzip  on;
-    gzip_comp_level  {{ gzip_comp_level }};
-
-    server {
-        listen       80;
-        server_name  {{ inventory_hostname_short }};
-
-        access_log  logs/access.log;
-
-        location / {
-            root   html;
-            index  index.html index.htm;
-        }
-
-        error_page   500 502 503 504  /50x.html;
-        location = /50x.html {
-            root   html;
-        }
+    error_page 404 /404.html;
+    error_page 500 502 503 504 /50x.html;
+    location = /50x.html {
+        root /usr/share/nginx/html;
     }
 }

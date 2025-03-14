@@ -1,80 +1,46 @@
+# nginx-mng/tasks/upgrade_nginx.yml
 ---
-- name: Check if Nginx is installed
-  stat:
-    path: "{{ nginx_install_dir }}/{{ inventory_hostname }}/current_version"
-  register: nginx_installed
-
-- name: Fail with a friendly message if Nginx is not installed
-  fail:
-    msg: "Nginx 未安装，请先安装 Nginx。"
-  when: not nginx_installed.stat.exists
-
-- name: Verify upgrade version
-  set_fact:
-    current_version: "{{ lookup('file', nginx_install_dir + '/' + inventory_hostname + '/current_version') | trim }}"
-  when: nginx_installed.stat.exists
-  
-- name: 创建备份目录
-  ansible.builtin.file:
-    path: "{{ nginx_install_dir }}/backups"
+- name: Create backup directory
+  file:
+    path: "{{ nginx_backup_path }}"
     state: directory
-    owner: nginx
-    group: nginx
     mode: '0755'
 
-- name: 获取当前日期时间
-  ansible.builtin.set_fact:
-    backup_timestamp: "{{ ansible_date_time.iso8601 | regex_replace(':', '-') }}"
+- name: Generate backup filename
+  set_fact:
+    backup_filename: "{{ nginx_backup_path }}/nginx-{{ inventory_hostname }}-{{ current_version }}-{{ ansible_date_time.date }}-{{ (ansible_date_time.hour | int + 8) % 24 }}_{{ ansible_date_time.minute }}_{{ ansible_date_time.second }}.tar.gz"
 
-- name: 备份当前Nginx安装
-  ansible.builtin.command:
-    cmd: cp -r {{ nginx_install_dir }}/{{ inventory_hostname }} {{ nginx_install_dir }}/backups/nginx-{{ inventory_hostname }}-{{ nginx_current_version }}-{{ backup_timestamp }}
-  register: backup_result
-  changed_when: backup_result.rc == 0
+- name: Backup current Nginx installation
+  archive:
+    path: "{{ nginx_install_dir }}"
+    dest: "{{ backup_filename }}"
+    format: gz
 
-- name: 记录备份信息
-  ansible.builtin.copy:
-    content: |
-      version: {{ nginx_current_version }}
-      backup_path: {{ nginx_install_dir }}/backups/nginx-{{ inventory_hostname }}-{{ nginx_current_version }}-{{ backup_timestamp }}
-      timestamp: {{ backup_timestamp }}
-    dest: "{{ nginx_install_dir }}/backups/last_backup.yml"
-    owner: nginx
-    group: nginx
+- name: Include compile install tasks
+  include_tasks: compile_install.yml
+
+- name: Create version log directory
+  file:
+    path: "{{ version_log_dir }}"
+    state: directory
+    mode: '0755'
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_group }}"
+
+- name: Record version upgrade
+  lineinfile:
+    path: "{{ version_history_file }}"
+    line: "[UPGRADE] backup ---> {{ backup_filename }} ---> UPGRADE New version: {{ nginx_version }}"
+    create: yes
+
+- name: Update current version
+  copy:
+    content: "{{ nginx_version }}"
+    dest: "{{ current_version_file }}"
     mode: '0644'
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_group }}"
 
-- name: 下载新版本Nginx二进制包
-  ansible.builtin.unarchive:
-    src: https://nginx.org/download/nginx-{{ nginx_new_version }}.tar.gz
-    dest: /tmp
-    remote_src: yes
-
-- name: 编译安装Nginx
-  ansible.builtin.shell: |
-    ./configure --prefix={{ nginx_install_dir }}/{{ inventory_hostname }} \
-                --user=nginx \
-                --group=nginx \
-                --with-http_ssl_module \
-                --with-http_stub_status_module \
-                --with-stream \
-                --with-threads &&
-    make &&
-    make install
-  args:
-    chdir: /tmp/nginx-{{ nginx_new_version }}
-  register: upgrade_result
-  failed_when: upgrade_result.rc != 0
-
-- name: 更新当前版本记录
-  ansible.builtin.copy:
-    content: "{{ nginx_new_version }}"
-    dest: "{{ nginx_install_dir }}/{{ inventory_hostname }}/current_version"
-    owner: nginx
-    group: nginx
-    mode: '0644'
-
-- name: 重启Nginx服务
-  ansible.builtin.systemd:
-    name: nginx
-    state: restarted
-    daemon_reload: yes
+- name: Cleanup old backups
+  shell: "ls -t {{ nginx_backup_path }}/nginx-*.tar.gz | tail -n +{{ nginx_max_backups + 1 }} | xargs rm -f"
+  changed_when: false

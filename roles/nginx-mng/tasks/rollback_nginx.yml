@@ -1,41 +1,104 @@
+# nginx-mng/tasks/rollback_nginx.yml
 ---
-- name: 检查备份信息文件是否存在
-  ansible.builtin.stat:
-    path: "{{ nginx_install_dir }}/backups/last_backup.yml"
-  register: backup_info_file
+- name: Find all backup files
+  find:
+    paths: "{{ nginx_backup_path }}"
+    patterns: "nginx-{{ inventory_hostname }}-*"
+  register: backup_files
 
-- name: 读取备份信息
-  ansible.builtin.include_vars:
-    file: "{{ nginx_install_dir }}/backups/last_backup.yml"
-    name: nginx_backup
-  when: backup_info_file.stat.exists
+- name: Ensure there is a backup to restore
+  fail:
+    msg: "No backup files found in {{ nginx_backup_path }}. Check if backup task ran successfully."
+  when: backup_files.matched == 0
 
-- name: 备份当前版本（回滚前）
-  ansible.builtin.command:
-    cmd: cp -r {{ nginx_install_dir }}/{{ inventory_hostname }} {{ nginx_install_dir }}/backups/pre-rollback-{{ inventory_hostname }}-{{ ansible_date_time.iso8601 | regex_replace(':', '-') }}
-  register: pre_rollback_backup
-  changed_when: pre_rollback_backup.rc == 0
-  when: backup_info_file.stat.exists
+- name: Get the latest backup file
+  set_fact:
+    latest_backup: "{{ backup_files.files | sort(attribute='mtime', reverse=true) | first }}"
 
-- name: 恢复之前的Nginx版本
-  ansible.builtin.command:
-    cmd: rm -rf {{ nginx_install_dir }}/{{ inventory_hostname }} && cp -r {{ nginx_backup.backup_path }} {{ nginx_install_dir }}/{{ inventory_hostname }}
-  register: rollback_result
-  changed_when: rollback_result.rc == 0
-  when: backup_info_file.stat.exists
-  notify:
-    - restart nginx
+- name: Generate backup filename
+  set_fact:
+    backup_filename: "{{ nginx_backup_path }}/nginx-pre-rollback-{{ inventory_hostname }}-{{ current_version }}-{{ ansible_date_time.date }}-{{ (ansible_date_time.hour | int + 8) % 24 }}_{{ ansible_date_time.minute }}_{{ ansible_date_time.second }}.tar.gz"
+  when: latest_backup is defined
 
-- name: 更新当前版本记录
-  ansible.builtin.copy:
-    content: "{{ nginx_backup.version }}"
-    dest: "{{ nginx_install_dir }}/{{ inventory_hostname }}/current_version"
-    owner: nginx
-    group: nginx
+- name: Backup current Nginx installation before rollback
+  archive:
+    path: "{{ nginx_install_dir }}/"
+    dest: "{{ backup_filename }}"
+    format: gz
+  register: backup_result
+  when: latest_backup is defined
+  become: yes
+
+- name: Delete target directory after backup
+  block:
+    - name: Check directory existence
+      stat:
+        path: "{{ nginx_install_dir }}"
+      register: dir_stat
+
+    - name: Remove existing directory
+      file:
+        path: "{{ nginx_install_dir }}"
+        state: absent
+      when: dir_stat.stat.exists
+      become: yes
+  when: backup_result is success
+
+- name: Restore Nginx from the latest backup
+  unarchive:
+    src: "{{ latest_backup.path }}"
+    dest: "{{ nginx_install_root }}"
+    remote_src: yes
+    owner: root
+    group: root
+    mode: '0755'
+  become: yes
+
+- name: Validate Nginx configuration
+  command: "{{ nginx_install_dir }}/sbin/nginx -t -c {{ nginx_install_dir }}/conf/nginx.conf"
+  register: nginx_validation
+  changed_when: false
+  ignore_errors: yes
+  become: yes
+
+# 保存回滚信息
+- name: Get current version before rollback
+  slurp:
+    src: "{{ current_version_file }}"
+  register: current_version_content
+  changed_when: false
+  ignore_errors: yes
+
+- name: Record version rollback
+  lineinfile:
+    path: "{{ version_history_file }}"
+    line: "[ROLLBACK] From: {{ current_version_content.content | default('unknown') | b64decode }} To: {{ latest_backup.path }}"
+    create: yes
+
+- name: Update current version after rollback
+  copy:
+    content: "{{ latest_backup.path }}"
+    dest: "{{ current_version_file }}"
     mode: '0644'
-  when: backup_info_file.stat.exists
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_group }}"
 
-- name: 回滚失败提示
-  ansible.builtin.fail:
-    msg: "没有找到Nginx备份信息，无法执行回滚操作。请确保之前已经执行过升级操作。"
-  when: not backup_info_file.stat.exists恢复之前的Nginx版本
+- name: Restart Nginx service conditionally
+  block:
+    - name: Restart Nginx
+      service:
+        name: nginx
+        state: restarted
+      become: yes
+    
+    - name: Verify Nginx status
+      service:
+        name: nginx
+        state: started
+      become: yes
+  when: nginx_validation.rc == 0
+  rescue:
+    - name: Handle Nginx restart failure
+      debug:
+        msg: "Failed to restart Nginx. Please check configuration files manually."
+      failed_when: true

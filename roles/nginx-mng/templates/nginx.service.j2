@@ -4,14 +4,14 @@ After=network.target
 
 [Service]
 Type=forking
-PIDFile={{ nginx_install_dir }}/{{ inventory_hostname }}/logs/nginx.pid
-ExecStartPre={{ nginx_install_dir }}/{{ inventory_hostname }}/sbin/nginx -t -c {{ nginx_install_dir }}/{{ inventory_hostname }}/conf/nginx.conf
-ExecStart={{ nginx_install_dir }}/{{ inventory_hostname }}/sbin/nginx -c {{ nginx_install_dir }}/{{ inventory_hostname }}/conf/nginx.conf
-ExecReload={{ nginx_install_dir }}/{{ inventory_hostname }}/sbin/nginx -s reload -c {{ nginx_install_dir }}/{{ inventory_hostname }}/conf/nginx.conf
+PIDFile={{ nginx_install_dir }}/logs/nginx.pid
+ExecStartPre={{ nginx_install_dir }}/sbin/nginx -t -c {{ nginx_install_dir }}/conf/nginx.conf
+ExecStart={{ nginx_install_dir }}/sbin/nginx -c {{ nginx_install_dir }}/conf/nginx.conf
+ExecReload={{ nginx_install_dir }}/sbin/nginx -s reload -c {{ nginx_install_dir }}/conf/nginx.conf
 ExecStop=/bin/kill -s QUIT $MAINPID
 PrivateTmp=true
-User=nginx
-Group=
+User={{ nginx_user }}
+Group={{ nginx_group }}
 AmbientCapabilities=CAP_NET_BIND_SERVICE
 EnvironmentFile=-/etc/sysconfig/nginx@%i
 

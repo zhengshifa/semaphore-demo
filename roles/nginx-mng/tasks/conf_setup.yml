@@ -1,36 +1,40 @@
+# nginx-mng/tasks/conf_setup.yml
 ---
-- name: 检查主机是否有专用配置模板
-  stat:
-    path: "{{ playbook_dir }}/../roles/nginx-mng/templates/{{ inventory_hostname }}-nginx.conf.j2"
-  register: host_specific_template
+- name: Create Nginx configuration directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ nginx_conf_path }}"
+    - "{{ nginx_conf_path }}/conf.d"
+    - "{{ nginx_log_path }}"
 
-- block:
-  - name: 部署主机专用nginx配置(如果配置有更新,会自动同步并重启服务)
-    ansible.builtin.template:
-      src: "{{ inventory_hostname }}-nginx.conf.j2"
-      dest: "{{ nginx_install_dir }}/{{ inventory_hostname }}/conf/nginx.conf"
-      owner: nginx
-      group: nginx
-      mode: '0644'
-    notify: restart nginx
-  when: host_specific_template.stat.exists
-
-- block:  
-  - name: 部署默认nginx配置(如果配置有更新,会自动同步并重启服务)
-    ansible.builtin.template:
-      src: nginx.conf.j2
-      dest: "{{ nginx_install_dir }}/{{ inventory_hostname }}/conf/nginx.conf"
-      owner: nginx
-      group: nginx
-      mode: '0644'
-    notify: restart nginx
-  when: not host_specific_template.stat.exists
-
-- name: 部署实例的systemd服务(如果配置有更新,会自动同步并重启服务)
-  ansible.builtin.template:
-    src: nginx.service.j2
-    dest: "/etc/systemd/system/nginx@{{ inventory_hostname }}.service"
-    owner: nginx
-    group: nginx
+- name: Configure main nginx.conf
+  template:
+    src: nginx.conf.j2
+    dest: "{{ nginx_conf_path }}/nginx.conf"
     mode: '0644'
-  notify: reload systemd
+  notify: 
+    - validate nginx config
+    - reload nginx
+
+- name: Configure host-specific configurations
+  template:
+    src: "{{ inventory_hostname }}-nginx.conf.j2"
+    dest: "{{ nginx_conf_path }}/conf.d/nginx.conf"
+    mode: '0644'
+  notify:
+    - validate nginx config
+    - reload nginx
+  ignore_errors: yes
+
+- name: Ensure proper permissions
+  file:
+    path: "{{ item }}"
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_group }}"
+    recurse: yes
+  loop:
+    - "{{ nginx_conf_path }}"
+    - "{{ nginx_log_path }}"

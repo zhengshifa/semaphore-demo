@@ -1,48 +1,47 @@
+# nginx-mng/tasks/main.yml
 ---
-- name: 创建nginx用户和组
-  ansible.builtin.user:
-    name: nginx
-    system: yes
-    create_home: no
-    shell: /sbin/nologin
+#- name: Include OS-specific variables
+#  include_vars: "{{ ansible_os_family }}.yml"
+#  tags: [always]
 
-# 执行回滚操作（如果启用）
-- name: 回滚Nginx到之前版本
-  ansible.builtin.include_tasks: rollback_nginx.yml
-  when: (nginx_rollback | bool) and not (nginx_upgrade | bool)
-  tags: [nginx, rollback]
+- name: Check current Nginx version
+  shell: "{{ nginx_install_dir }}/sbin/nginx -v 2>&1"
+  register: current_version_tmp
+  changed_when: false
+  ignore_errors: yes
+  tags: [upgrade]
 
-# 执行升级操作（如果启用）
-- name: 升级Nginx到新版本
-  ansible.builtin.include_tasks: upgrade_nginx.yml
-  when: (nginx_upgrade | bool) and not (nginx_rollback | bool)
-  tags: [nginx, upgrade]
+- name: Extract Nginx version from output
+  set_fact:
+    current_version: "{{ current_version_tmp.stdout | regex_search('nginx/([0-9.]+)') | regex_replace('nginx/', '') }}"
+  when: current_version_tmp.rc == 0
+  ignore_errors: yes
+  tags: [upgrade]
 
-# 如果不是升级或回滚，则执行标准安装流程
-- block:
-  - name: 安装依赖包
-    ansible.builtin.include_tasks: install_dependencies.yml
+- name: Install dependencies
+  include_tasks: install_dependencies.yml
+  tags: [install, dependencies]
 
-  - name: 编译安装Nginx
-    ansible.builtin.include_tasks: compile_install.yml
+- name: Compile and install Nginx
+  include_tasks: compile_install.yml
+  when: not (nginx_upgrade | default(false) | bool) and not (nginx_rollback | default(false) | bool) and current_version_tmp.rc != 0
+  tags: [install]
 
-  - name: 服务配置
-    ansible.builtin.include_tasks: conf_setup.yml
-  
-  - name: 更新当前版本记录
-    ansible.builtin.copy:
-      content: "{{ nginx_version }}"
-      dest: "{{ nginx_install_dir }}/{{ inventory_hostname }}/current_version"
-      owner: nginx
-      group: nginx
-      mode: '0644'
-  when: not (nginx_upgrade | bool) and not (nginx_rollback | bool)
-  tags: [nginx, install]
+- name: Setup Nginx configuration
+  include_tasks: conf_setup.yml
+  tags: [config]
 
-- name: 安装目录属主和属组调整
-  become: yes  # 如果需要提升权限
-  file:
-    path: "{{ nginx_install_dir }}" # 替换为你要修改的目录路径
-    owner: nginx  # 替换为新的属主
-    group: nginx  # 替换为新的属组
-    recurse: yes  # 递归地修改目录及其子目录和文件的属主和属组
+- name: Handle version upgradeGenerate backup
+  include_tasks: upgrade_nginx.yml
+  when: >
+    (nginx_upgrade | default(false) | bool) and
+    not (nginx_rollback | default(false) | bool) and
+    (current_version | default('0.0.0') is version_compare(nginx_version | default('0.0.0'), '<')) and current_version_tmp.rc == 0
+  tags: [upgrade]
+
+- name: Handle version rollback
+  include_tasks: rollback_nginx.yml
+  when: >
+    (nginx_rollback | default(false) | bool) and 
+    not (nginx_upgrade | default(false) | bool) and current_version_tmp.rc == 0
+  tags: [rollback]
