@@ -1,0 +1,26 @@
+[mysqld]
+# 基础配置
+port = {{ mysql_port }}
+bind-address = {{ mysql_bind_address }}
+datadir=/var/lib/mysql
+socket=/var/lib/mysql/mysql.sock
+
+# 连接配置
+max_connections=1000
+connect_timeout=20
+wait_timeout=600
+
+# 日志配置
+log-error=/var/log/mysqld.log
+slow_query_log=1
+slow_query_log_file=/var/log/mysql-slow.log
+
+# 安全配置
+skip-name-resolve
+
+[client]
+port={{ mysql_port }}
+socket=/var/lib/mysql/mysql.sock
+
+[mysql]
+no-auto-rehash

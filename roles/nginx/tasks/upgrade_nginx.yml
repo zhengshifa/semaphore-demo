@@ -17,7 +17,7 @@
     format: gz
 
 - name: 编译安装 nginx(升级)
-  include_tasks: compile_install.yml
+  include_tasks: install.yml
 
 - name: 记录更新后的版本
   lineinfile:

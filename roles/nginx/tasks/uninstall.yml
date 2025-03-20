@@ -1,0 +1,10 @@
+---
+- name: 停止 nginx 服务
+  systemd:
+    name: nginx@"{{ inventory_hostname }}"
+    state: stop
+
+- name: 删除 nginx 安装目录
+  file:
+    path: "{{ nginx_install_dir }}"
+    state: absent

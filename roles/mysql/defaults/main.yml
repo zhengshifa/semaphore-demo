@@ -1,0 +1,18 @@
+# 默认配置参数
+mysql_version: 8.0.35
+mysql_install_dir: /usr/local/mysql
+mysql_source_url: "https://dev.mysql.com/get/Downloads/MySQL-{{ mysql_version.split('.')[0] }}.{{ mysql_version.split('.')[1] }}/mysql-{{ mysql_version }}.tar.gz"
+mysql_service_name: mysqld
+mysql_config_path: /etc/my.cnf
+mysql_root_password: "{{ vault_mysql_root_password }}"
+mysql_port: 3306
+mysql_bind_address: 0.0.0.0
+mysql_databases: []
+mysql_users: []
+
+# 编译依赖
+build_dependencies:
+  - gcc
+  - cmake
+  - ncurses-devel
+  - openssl-devel

@@ -2,17 +2,22 @@
 ---
 - name: pre 获取 nginx 版本信息
   import_tasks: pre_nginx_version.yml
-  tags: [install,uninstall,config,upgrade,rollback]
-  #tags: [test]
+  tags: [always]
+  #tags: [debug]
 
 - name: 初始化安装环境
   import_tasks: init_sys.yml
   tags: [install]
 
 - name: 编译安装 nginx
-  import_tasks: compile_install.yml
+  import_tasks: install.yml
   tags: [install]
   when: current_nginx_version.rc != 0
+
+- name: 卸载nginx
+  import_tasks: uninstall.yml
+  tags: [uninstall]
+  when: current_nginx_version.rc == 0
 
 - name: 配置管理
   import_tasks: conf_setup.yml
@@ -29,4 +34,4 @@
 
 - name: after 获取 nginx 版本信息
   import_tasks: after_nginx_version.yml
-  tags: [install,uninstall,config,upgrade,rollback]
+  tags: [always]

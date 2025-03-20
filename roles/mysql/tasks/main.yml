@@ -1,0 +1,13 @@
+---
+# 主入口文件
+- name: 执行安装阶段
+  include_tasks: install.yml
+
+- name: 执行配置阶段
+  include_tasks: config.yml
+
+- name: 管理服务状态
+  include_tasks: service.yml
+
+- name: 初始化数据库
+  include_tasks: setup_db.yml

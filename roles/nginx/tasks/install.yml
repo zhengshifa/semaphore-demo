@@ -1,4 +1,3 @@
-# nginx-mng/tasks/compile_install.yml
 ---
 - block:
   - name: 下载 nginx 源码包

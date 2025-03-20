@@ -2,14 +2,14 @@
 ---
 - name: restart nginx
   systemd:
-    name: nginx
+    name: nginx@"{{ inventory_hostname }}"
     state: restarted
     daemon_reload: yes
   listen: "restart nginx"
 
 - name: reload nginx
   systemd:
-    name: nginx
+    name: nginx@"{{ inventory_hostname }}"
     state: reloaded
   listen: "reload nginx"
 
