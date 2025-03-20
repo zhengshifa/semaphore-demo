@@ -1,0 +1,30 @@
+# nginx-mng/tasks/upgrade_nginx.yml
+---
+- name: Create backup directory
+  file:
+    path: "{{ nginx_backup_path }}"
+    state: directory
+    mode: '0755'
+
+- name: Generate backup filename
+  set_fact:
+    backup_filename: "{{ nginx_backup_path }}/nginx-{{ inventory_hostname }}-{{ current_nginx_version.stdout }}-{{ ansible_date_time.date }}-{{ (ansible_date_time.hour | int + 8) % 24 }}_{{ ansible_date_time.minute }}_{{ ansible_date_time.second }}.tar.gz"
+
+- name: Backup current Nginx installation
+  archive:
+    path: "{{ nginx_install_dir }}"
+    dest: "{{ backup_filename }}"
+    format: gz
+
+- name: 编译安装 nginx(升级)
+  include_tasks: compile_install.yml
+
+- name: 记录更新后的版本
+  lineinfile:
+    path: "{{ version_log_file }}"
+    line: "[UPGRADE] backup ---> {{ backup_filename }} ---> UPGRADE New version: {{ nginx_version }}"
+    create: yes
+
+- name: Cleanup old backups
+  shell: "ls -t {{ nginx_backup_path }}/nginx-*.tar.gz | tail -n +{{ nginx_max_backups + 1 }} | xargs rm -f"
+  changed_when: false

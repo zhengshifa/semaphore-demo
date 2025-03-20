@@ -4,8 +4,8 @@ server {
     server_name {{ inventory_hostname }};
     root /var/www/web1;
 
-    access_log {{ nginx_log_path }}/access.log main;
-    error_log  {{ nginx_log_path }}/error.log;
+    access_log {{ nginx_install_dir }}/logs/access.log main;
+    error_log  {{ nginx_install_dir }}/logs/error.log;
 
     location / {
         try_files $uri $uri/ =404;

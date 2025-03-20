@@ -7,9 +7,6 @@ nginx_source_path: "/tmp"
 
 # Installation paths
 nginx_install_dir: "{{ nginx_install_root }}/{{ inventory_hostname }}"
-nginx_log_path: "{{ nginx_install_dir }}/logs"
-nginx_pid_path: "{{ nginx_log_path }}/nginx.pid"
-nginx_conf_path: "{{ nginx_install_dir }}/conf"
 
 # Compile options
 nginx_configure_options: >
@@ -28,6 +25,5 @@ nginx_backup_path: "/usr/local/nginx/backups"
 nginx_max_backups: 10
 
 # Version management settings
-version_log_dir: "/var/log/nginx_management"
-current_version_file: "{{ version_log_dir }}/{{ inventory_hostname }}/current_version"
-version_history_file: "{{ version_log_dir }}/{{ inventory_hostname }}/version_history.log"
+version_log_dir: "/var/log/nginx_version_log"
+version_log_file: "{{ version_log_dir }}/{{ inventory_hostname }}.log"

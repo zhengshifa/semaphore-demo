@@ -15,5 +15,5 @@ docker run -p 3000:3000 --name semaphore \
 	-e SEMAPHORE_ADMIN_EMAIL=admin@localhost \
 	-d semaphoreui/semaphore:latest
 
-
+export ANSIBLE_CONFIG=ansible.cfg
 ansible-playbook -i invs/dev/hosts playbooks/nginx-install.yml

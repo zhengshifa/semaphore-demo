@@ -16,5 +16,10 @@
 - name: validate nginx configuration
   command: "{{ nginx_install_dir }}/sbin/nginx -t"
   register: nginx_validate
-  changed_when: false
   listen: "validate nginx config"
+
+- name: 重新加载 systemd 配置
+  systemd:
+    daemon_reload: yes
+  become: yes
+  listen: "daemon_reload"

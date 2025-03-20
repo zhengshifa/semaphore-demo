@@ -1,25 +1,5 @@
-- name: Install Docker dependencies
-  ansible.builtin.package:
-    name:
-      - apt-transport-https
-      - ca-certificates
-      - curl
-      - gnupg
-      - lsb-release
+- name: install htop
+  package:
+    name: htop
     state: present
-  when: ansible_os_family == "Debian"
-
-- name: Add Docker GPG key
-  ansible.builtin.apt_key:
-    url: https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg
-    state: present
-
-- name: Add Docker repository
-  ansible.builtin.apt_repository:
-    repo: "deb [arch=amd64] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
-    state: present
-
-- name: Install Docker
-  ansible.builtin.package:
-    name: "docker-ce={{ docker_version }}*"
-    state: present
+  become: True

@@ -17,7 +17,7 @@
 
 - name: Generate backup filename
   set_fact:
-    backup_filename: "{{ nginx_backup_path }}/nginx-pre-rollback-{{ inventory_hostname }}-{{ current_version }}-{{ ansible_date_time.date }}-{{ (ansible_date_time.hour | int + 8) % 24 }}_{{ ansible_date_time.minute }}_{{ ansible_date_time.second }}.tar.gz"
+    backup_filename: "{{ nginx_backup_path }}/nginx-pre-rollback-{{ inventory_hostname }}-{{ current_nginx_version.stdout }}-{{ ansible_date_time.date }}-{{ (ansible_date_time.hour | int + 8) % 24 }}_{{ ansible_date_time.minute }}_{{ ansible_date_time.second }}.tar.gz"
   when: latest_backup is defined
 
 - name: Backup current Nginx installation before rollback
@@ -49,8 +49,8 @@
     src: "{{ latest_backup.path }}"
     dest: "{{ nginx_install_root }}"
     remote_src: yes
-    owner: root
-    group: root
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_group }}"
     mode: '0755'
   become: yes
 
@@ -62,26 +62,11 @@
   become: yes
 
 # 保存回滚信息
-- name: Get current version before rollback
-  slurp:
-    src: "{{ current_version_file }}"
-  register: current_version_content
-  changed_when: false
-  ignore_errors: yes
-
 - name: Record version rollback
   lineinfile:
-    path: "{{ version_history_file }}"
-    line: "[ROLLBACK] From: {{ current_version_content.content | default('unknown') | b64decode }} To: {{ latest_backup.path }}"
+    path: "{{ version_log_file }}"
+    line: "[ROLLBACK] From: {{ current_nginx_version.stdout }} PRE_BACKUP: {{ backup_filename }} To: {{ latest_backup.path }}"
     create: yes
-
-- name: Update current version after rollback
-  copy:
-    content: "{{ latest_backup.path }}"
-    dest: "{{ current_version_file }}"
-    mode: '0644'
-    owner: "{{ nginx_user }}"
-    group: "{{ nginx_group }}"
 
 - name: Restart Nginx service conditionally
   block:

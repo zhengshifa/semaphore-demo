@@ -6,16 +6,14 @@
 #iam-web1 ansible_host=10.16.10.93
 #iam-web2 ansible_host=10.16.10.94
 web1 ansible_host=127.0.0.1
-web2 ansible_host=127.0.0.1
-web3 ansible_host=127.0.0.1
-web4 ansible_host=127.0.0.1
+#web2 ansible_host=127.0.0.1
 
 [iam_nginx_servers:vars]
-nginx_version=1.26.1
+nginx_version=1.26.3
 nginx_user=nginx
 nginx_group=nginx
 nginx_install_root=/usr/local/nginx
-#nginx_upgrade=true
+nginx_upgrade=true
 # 目前只能回滚到上一个版本
 #nginx_rollback=true
 
@@ -33,3 +31,4 @@ keepalive_timeout=60
 gzip_comp_level=3
 nginx_version=1.24.0
 nginx_install_dir=/usr/local/nginx
+

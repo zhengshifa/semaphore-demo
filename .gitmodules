@@ -1,3 +1,0 @@
-[submodule "roles/ping"]
-	path = roles/ping
-	url = https://github.com/semaphoreui/demo-project-ping-role.git

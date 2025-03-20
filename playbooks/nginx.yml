@@ -1,6 +1,6 @@
 # example-playbook.yml
 ---
-- hosts: iam_nginx_servers
+- hosts: all
   become: yes
   roles:
-   - role: nginx-mng
+   - role: nginx

@@ -1,7 +1,7 @@
 # nginx-mng/templates/nginx.conf.j2
 user {{ nginx_user }} {{ nginx_group }};
 worker_processes auto;
-pid {{ nginx_pid_path }};
+pid {{ nginx_install_dir }}/logs/nginx.pid;
 
 events {
     worker_connections 1024;
@@ -17,8 +17,8 @@ http {
                       '$status $body_bytes_sent "$http_referer" '
                       '"$http_user_agent" "$http_x_forwarded_for"';
 
-    access_log  {{ nginx_log_path }}/access.log  main;
-    error_log   {{ nginx_log_path }}/error.log warn;
+    access_log  {{ nginx_install_dir }}/logs/access.log  main;
+    error_log   {{ nginx_install_dir }}/logs/error.log warn;
 
     sendfile        on;
     tcp_nopush      on;
@@ -35,5 +35,5 @@ http {
     gzip_comp_level 6;
     gzip_types text/plain text/css application/javascript application/json application/x-javascript text/xml application/xml application/rss+xml text/javascript image/svg+xml application/vnd.ms-fontobject application/x-font-ttf font/opentype;
 
-    include {{ nginx_conf_path }}/conf.d/*.conf;
+    include {{ nginx_install_dir }}/conf/conf.d/*.conf;
 }
