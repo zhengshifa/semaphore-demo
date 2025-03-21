@@ -22,4 +22,4 @@
     throttle: 1  # 限制同一主机上的任务并发数为 1
   
   - name: 配置nginx
-    include_tasks: conf_setup.yml
+    include_tasks: config.yml

@@ -1,8 +1,0 @@
-{
-  "log-driver": "{{ docker_daemon_config['log-driver'] }}",
-  "log-opts": {
-    {% for key, value in docker_daemon_config['log-opts'].items() %}
-    "{{ key }}": "{{ value }}"{% if not loop.last %},{% endif %}
-    {% endfor %}
-  }
-}

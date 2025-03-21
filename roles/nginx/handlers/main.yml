@@ -1,10 +1,11 @@
 # nginx-mng/handlers/main.yml
 ---
-- name: restart nginx
+- name: daemon_reolad/restart/enable  nginx
   systemd:
     name: nginx@"{{ inventory_hostname }}"
     state: restarted
     daemon_reload: yes
+  become: yes
   listen: "restart nginx"
 
 - name: reload nginx
@@ -17,9 +18,3 @@
   command: "{{ nginx_install_dir }}/sbin/nginx -t"
   register: nginx_validate
   listen: "validate nginx config"
-
-- name: 重新加载 systemd 配置
-  systemd:
-    daemon_reload: yes
-  become: yes
-  listen: "daemon_reload"

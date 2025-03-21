@@ -1,5 +1,0 @@
-- name: install htop
-  package:
-    name: nfs-utils
-    state: present
-  become: True

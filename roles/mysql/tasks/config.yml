@@ -1,20 +1,10 @@
 ---
 # 配置相关任务
-- name: 初始化数据库
-  command: "{{ mysql_install_dir }}/bin/mysqld --initialize-insecure --user=mysql"
-  become: yes
-
-- name: 设置环境变量
-  lineinfile:
-    path: /etc/profile
-    line: 'export PATH={{ mysql_install_dir }}/bin:$PATH'
-    regexp: '^export PATH=.*mysql'
-
 - name: 生成MySQL配置文件
   template:
     src: my.cnf.j2
     dest: "{{ mysql_config_path }}"
-    owner: root
-    group: root
+    owner: "{{ mysql_user }}"
+    group: "{{ mysql_group }}"
     mode: 0644
   notify: restart mysql

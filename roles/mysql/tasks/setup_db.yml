@@ -10,11 +10,13 @@
     host: localhost
 
 - name: 执行安全加固
-  mysql_secure_installation:
+  community.mysql.mysql_query:
     login_user: root
     login_password: "{{ mysql_root_password }}"
-    remove_anonymous_users: yes
-    remove_test_db: yes
+    query: 
+      - "DELETE FROM mysql.user WHERE User='';"
+      - "DROP DATABASE IF EXISTS test;"
+      - "FLUSH PRIVILEGES;"
 
 - name: 创建应用数据库
   mysql_db:

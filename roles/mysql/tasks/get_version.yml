@@ -1,0 +1,24 @@
+- name: 获取并提取当前mysql版本信息(如果已经存在)
+  shell: |
+    {{ mysql_install_dir }}/sbin/mysql -v 2>&1 |  awk '{print $3}'
+  register: current_mysql_version
+  changed_when: false
+  ignore_errors: yes
+
+- name: 创建保存版本日志目录文件
+  file:
+    path: "{{ version_log_dir }}"
+    state: directory
+    mode: '0755'
+    owner: "{{ mysql_user }}"
+    group: "{{ mysql_group }}"
+
+- name: 获取当前时间
+  set_fact:
+    current_time: "{{ ansible_date_time.date }}-{{ (ansible_date_time.hour | int + 8) % 24 }}_{{ ansible_date_time.minute }}_{{ ansible_date_time.second }}"
+
+- name: 将 mysql 版本信息记录到文本文件
+  ansible.builtin.lineinfile:
+    path: "{{ version_log_file }}"
+    line: "{{ current_time }} - {{ ansible_run_tags }} - pre: {{ current_mysql_version.stdout }}"
+    create: yes

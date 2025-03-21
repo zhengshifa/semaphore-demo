@@ -4,15 +4,7 @@
   template:
     src: mysql.service.j2
     dest: /usr/lib/systemd/system/{{ mysql_service_name }}.service
-    owner: root
-    group: root
+    owner: "{{ mysql_user }}"
+    group: "{{ mysql_group }}"
     mode: 0644
   notify: restart mysql
-
-- name: 启动MySQL服务
-  systemd:
-    name: "{{ mysql_service_name }}"
-    state: started
-    enabled: yes
-    daemon_reload: yes
-  become: yes

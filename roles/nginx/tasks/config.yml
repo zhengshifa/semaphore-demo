@@ -1,22 +1,4 @@
-# nginx-mng/tasks/conf_setup.yml
 ---
-- name: 创建systemd管理
-  template:
-    src: nginx.service.j2
-    dest: /etc/systemd/system/nginx@{{ inventory_hostname }}.service
-    owner: "{{ nginx_user }}"
-    group: "{{ nginx_group }}"
-    mode: '0644'
-  notify: 
-    - daemon_reload
-    - restart nginx
-
-- name: 设置开机启动nginx
-  systemd:
-    name: nginx@{{ inventory_hostname }}
-    enabled: yes
-  become: yes
-
 - name: 配置 nginx.conf
   template:
     src: nginx.conf.j2

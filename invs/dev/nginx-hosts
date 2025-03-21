@@ -11,14 +11,10 @@ web3 ansible_host=127.0.0.1
 web4 ansible_host=127.0.0.1
 
 [iam_nginx_servers:vars]
-nginx_version=1.26.1
+nginx_version=1.26.3
 nginx_user=nginx
 nginx_group=nginx
 nginx_install_root=/usr/local/nginx
-#nginx_upgrade=true
-# 目前只能回滚到上一个版本
-#nginx_rollback=true
-
 
 ## newdo
 [newdo_nginx_servers]

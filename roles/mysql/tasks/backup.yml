@@ -1,0 +1,22 @@
+---
+- name: 使用模板生成备份脚本
+  template:
+    src: mysql_backup.sh.j2
+    dest: "{{ backup_script_path }}/{{ inventory_hostname }}_mysql_backup.sh"
+    mode: '0755'
+
+- name: 添加定时任务
+  cron:
+    name: "MySQL 逻辑备份"
+    job: "{{ backup_script_path }}/{{ inventory_hostname }}_mysql_backup.sh"
+    minute: "{{ backup_cron_schedule.split()[0] }}"
+    hour: "{{ backup_cron_schedule.split()[1] }}"
+    day: "{{ backup_cron_schedule.split()[2] }}"
+    month: "{{ backup_cron_schedule.split()[3] }}"
+    weekday: "{{ backup_cron_schedule.split()[4] }}"
+    user: root
+
+- name: 执行一次备份任务
+  shell: "{{ backup_script_path }}/{{ inventory_hostname }}_mysql_backup.sh"
+  become: yes
+  when: '"backup" in ansible_run_tags"'

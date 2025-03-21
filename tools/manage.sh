@@ -53,7 +53,7 @@ fi
 #fi
 
 # 生成 Ansible 命令
-ANSIBLE_COMMAND="ansible-playbook -i ${WORK_DIR}/invs/$ENVIRONMENT/hosts ${WORK_DIR}/playbooks/$SERVICE.yml -t $ACTION"
+ANSIBLE_COMMAND="ansible-playbook -i ${WORK_DIR}/invs/$ENVIRONMENT/${SERVICE}-hosts ${WORK_DIR}/playbooks/$SERVICE.yml -t $ACTION"
 
 # 打印生成的命令
 echo "Generated Ansible command: $ANSIBLE_COMMAND"

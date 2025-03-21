@@ -1,59 +1,27 @@
 ---
-# 安装相关任务
-- name: 安装编译依赖
-  package:
-    name: "{{ build_dependencies }}"
-    state: present
-  become: yes
-
-- name: 创建MySQL用户和组
-  group:
-    name: mysql
-    state: present
-  become: yes
-
-- name: 创建安装目录
-  file:
-    path: "{{ mysql_install_dir }}"
-    state: directory
-    owner: root
-    group: root
-    mode: 0755
-  become: yes
-
 - name: 下载MySQL源码包
   get_url:
     url: "{{ mysql_source_url }}"
-    dest: /tmp/mysql-{{ mysql_version }}.tar.gz
-    checksum: sha256:30a6bfa6a3824c1f4b6d6eaea113c9b3d4a3531d5c6d193a5a8158a0a8a8c8e5
+    dest: /tmp/mysql-{{ mysql_version }}.tar.xz
 
 - name: 解压源码包
   unarchive:
-    src: /tmp/mysql-{{ mysql_version }}.tar.gz
-    dest: /tmp/
+    src: /tmp/mysql-{{ mysql_version }}.tar.xz
+    dest: "{{ mysql_install_dir }}"
     remote_src: yes
 
-- name: 编译安装MySQL
-  command: |
-    cmake . -DCMAKE_INSTALL_PREFIX={{ mysql_install_dir }} \
-            -DSYSCONFDIR=/etc \
-            -DWITH_INNOBASE_STORAGE_ENGINE=1 \
-            -DWITH_ARCHIVE_STORAGE_ENGINE=1 \
-            -DWITH_BLACKHOLE_STORAGE_ENGINE=1 \
-            -DWITH_READLINE=1 \
-            -DWITH_SSL=system \
-            -DWITH_ZLIB=system \
-            -DWITH_LIBWRAP=0 \
-            -DMYSQL_DATADIR=/var/lib/mysql \
-            -DMYSQL_UNIX_ADDR=/tmp/mysql.sock \
-            -DDEFAULT_CHARSET=utf8mb4 \
-            -DDEFAULT_COLLATION=utf8mb4_general_ci
-  args:
-    chdir: /tmp/mysql-{{ mysql_version }}
+- name: 初始化数据库
+  command: "{{ mysql_install_dir }}/bin/mysqld --initialize-insecure --user={{ mysql_user}}  --basedir={{ mysql_install_dir }} --datadir={{ mysql_data_dir }}"
   become: yes
 
-- name: 执行make安装
-  command: make && make install
-  args:
-    chdir: /tmp/mysql-{{ mysql_version }}
-  become: yes
+- name: 加载mysql配置
+  include_tasks: config.yml
+
+- name: 加载服务配置
+  include_tasks: service.yml
+
+- name: 初始化数据库
+  include_tasks: setup_db.yml
+
+- name: 配置备份任务
+  include_tasks: backup.yml

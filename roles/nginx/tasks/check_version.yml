@@ -1,0 +1,62 @@
+- name: 获取并提取当前nginx版本信息(如果已经存在)
+  shell: |
+    {{ nginx_install_dir }}/sbin/mysql -v 2>&1 | grep -oP 'nginx/\K[0-9.]+'
+  register: after_nginx_version
+  changed_when: false
+  ignore_errors: yes
+
+- name: 创建保存版本日志目录文件
+  file:
+    path: "{{ version_log_dir }}"
+    state: directory
+    mode: '0755'
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_group }}"
+
+
+- name: 将 Nginx 版本信息记录到文本文件
+  ansible.builtin.lineinfile:
+    path: "{{ version_log_file }}"
+    line: "{{ current_time }} - {{ ansible_run_tags }} - after: {{ after_nginx_version.stdout }}"
+    create: yes
+
+- block: # 输出结果
+    - name: 安装
+      debug:
+        msg: "安装成功"
+      when: >
+        not current_nginx_version is defined and
+        after_nginx_version.stdout is version_compare(nginx_version, '==')  and
+        'install' in ansible_run_tags
+
+    - name: 配置
+      debug:
+        msg: "配置更新成功"
+      when: >
+        current_nginx_version is defined and
+        after_nginx_version.stdout is version_compare(current_nginx_version.stdout, '==')  and
+        'config' in ansible_run_tags
+
+    - name: 升级
+      debug:
+        msg: "版本升级成功"
+      when: >
+        current_nginx_version is defined and
+        after_nginx_version.stdout is version_compare(current_nginx_version.stdout, '>')  and
+        'upgrade' in ansible_run_tags
+
+    - name: 回滚
+      debug:
+        msg: "版本回滚成功"
+      when: >
+        current_nginx_version is defined and
+        after_nginx_version.stdout is version_compare(current_nginx_version.stdout, '<')  and
+        'rollback' in ansible_run_tags
+  when: >
+    after_nginx_version.stdout is defined and
+    nginx_version is defined
+  rescue:
+    - name: 失败
+      debug:
+        msg: "动作 {{ ansible_run_tags }} 执行失败"
+      failed_when: true
