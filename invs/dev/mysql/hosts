@@ -8,5 +8,5 @@ mysql02 ansible_host=127.0.0.1 port=3307
 #vault_mysql_root_password: "123456"    yml 已经存在加密文件secrets.yml中 
 user=mysql
 group=mysql
-version=8.0.35
+version=8.0.36
 download_url="https://cdn.mysql.com/archives/mysql-8.0/mysql-{{ version }}-linux-glibc2.12-x86_64.tar.xz"

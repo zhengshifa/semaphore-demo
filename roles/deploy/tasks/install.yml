@@ -9,7 +9,7 @@
       mode: '0644'
     throttle: 1  # 限制同一主机上的任务并发数为 1
   
-  - name: 解压源码包(需要编译安装)
+  - name: 解压源码包
     unarchive:
       src: "/tmp/{{ service }}-{{ version }}.tar.gz"
       dest: "{{ install_dir | dirname }}"
@@ -25,9 +25,10 @@
     throttle: 1  # 限制同一主机上的任务并发数为 1
   - name: 创建链接目录
     file:
-      src: "{{ install_dir }}"
-      dest: "{{ install_dir | dirname }}/{{ version }}"
+      src: "{{ install_dir | dirname }}/{{ version }}"
+      dest: "{{ install_dir }}"
       state: link
+      force: yes
   when: service == "nginx"
 
 # mysql
@@ -38,9 +39,10 @@
 
   - name: 创建链接目录
     file:
-      src: "{{ install_dir }}"
-      dest: "{{ install_dir | dirname }}/{{ version }}"
+      src: "{{ install_dir | dirname }}/{{ version }}"
+      dest: "{{ install_dir }}"
       state: link
+      force: yes
 
   - name: 初始化数据库
     command: "{{ install_dir }}/bin/mysqld --initialize-insecure --user={{ user}}  --basedir={{ install_dir }} --datadir={{ data_dir }}"

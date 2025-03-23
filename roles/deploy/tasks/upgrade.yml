@@ -8,8 +8,7 @@
 - name: 记录更新后的版本
   lineinfile:
     path: "{{ version_log_dir }}/version.log"
-    #line: "[UPGRADE] backup ---> {{ backup_filename }} ---> UPGRADE New version: {{ version }}"
-    line: "[UPGRADE] {{ current_version.stdout }} ---> UPGRADE New version: {{ version }}"
+    line: "{{ current_time }} - [UPGRADE] - {{ version }}"
     create: yes
 
 - name: 清理过期备份数据

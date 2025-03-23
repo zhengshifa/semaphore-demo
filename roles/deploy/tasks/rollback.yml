@@ -1,7 +1,7 @@
 - name: 回滚软链接更新
   file:
-    src: "{{ install_dir }}"
-    dest: "{{ install_dir | dirname }}/{{ version }}"
+    src: "{{ install_dir | dirname }}/{{ version }}"
+    dest: "{{ install_dir }}"
     state: link
     force: yes
 
@@ -9,7 +9,7 @@
 - name: 记录回滚信息
   lineinfile:
     path: "{{ version_log_dir }}/version.log"
-    line: "[ROLLBACK] From: {{ current_version.stdout }} To: {{ version }}"
+    line: "{{ current_time }} - [ROLLBACK] - {{ version }}"
     create: yes
 
 - name: 重启服务

@@ -15,11 +15,6 @@
   ignore_errors: yes
   when: service == "mysql"
 
-#- name: 版本信息转换成字符串
-#  set_fact:
-#    current_version_str: "{{ current_version.stdout | string }}"
-#    after_version_str: "{{ after_version.stdout | string }}"
-
 - block: # 输出结果
     - name: 将版本信息记录到文本文件
       ansible.builtin.lineinfile:
@@ -82,3 +77,4 @@
     - "{{ log_dir }}"
     - "{{ version_log_dir }}"
     - "{{ backup_dir }}"
+  when: not "'uninstall' in ansible_run_tags"
