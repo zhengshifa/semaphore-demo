@@ -1,0 +1,42 @@
+---
+- name: 启用 EPEL 仓库
+  yum:
+    name: epel-release
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: 安装编译依赖
+  package:
+    name: "{{ build_dependencies }}"
+    state: present
+  become: yes
+  when: ansible_os_family == "RedHat"
+
+- name: 创建用户组
+  group:
+    name: "{{ group }}"
+    state: present
+  
+- name: 创建用户
+  user:
+    name: "{{ user }}"
+    group: "{{ group }}"
+#    system: yes
+    shell: /sbin/nologin
+    create_home: no
+
+- name: 创建相关目录
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ user }}"
+    group: "{{ group }}"
+    mode: 0755
+    recurse: yes
+  with_items:
+    - "{{ install_dir }}"
+    - "{{ conf_dir }}"
+    - "{{ data_dir }}"
+    - "{{ log_dir }}"
+    - "{{ version_log_dir }}"
+    - "{{ backup_dir }}"

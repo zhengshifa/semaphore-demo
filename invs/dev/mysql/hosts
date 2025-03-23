@@ -1,0 +1,12 @@
+[iam_mysql_servers]
+#iam-web1 ansible_host=10.16.10.93
+#iam-web2 ansible_host=10.16.10.94
+mysql01 ansible_host=127.0.0.1 port=3306
+mysql02 ansible_host=127.0.0.1 port=3307
+
+[iam_mysql_servers:vars]
+#vault_mysql_root_password: "123456"    yml 已经存在加密文件secrets.yml中 
+user=mysql
+group=mysql
+version=8.0.35
+download_url="https://cdn.mysql.com/archives/mysql-8.0/mysql-{{ version }}-linux-glibc2.12-x86_64.tar.xz"

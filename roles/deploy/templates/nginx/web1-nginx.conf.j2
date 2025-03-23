@@ -1,0 +1,20 @@
+# nginx-mng/templates/web1-nginx.conf.j2
+server {
+    listen 8080;
+    server_name {{ inventory_hostname }};
+    root /var/www/web1;
+
+    access_log {{ install_dir }}/logs/access.log main;
+    error_log  {{ install_dir }}/logs/error.log;
+
+    location / {
+        try_files $uri $uri/ =404;
+        index index.html index.htm;
+    }
+
+    error_page 404 /404.html;
+    error_page 500 502 503 504 /50x.html;
+    location = /50x.html {
+        root /usr/share/nginx/html;
+    }
+}

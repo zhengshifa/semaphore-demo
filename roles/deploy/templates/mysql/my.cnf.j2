@@ -1,0 +1,28 @@
+[mysqld]
+# 基础配置
+user={{ user }}
+group={{ group }}
+port = {{ port }}
+bind-address = {{ mysql_bind_address }}
+datadir= {{ data_dir }}
+socket="{{ data_dir }}/mysql.sock"
+
+# 连接配置
+max_connections=1000
+connect_timeout=20
+wait_timeout=600
+
+# 日志配置
+log-error="{{ log_dir }}/error.log"
+slow_query_log=1
+slow_query_log_file="{{ log_dir }}/slow_query.log"
+
+# 安全配置
+skip-name-resolve
+
+[client]
+port={{ port }}
+socket="{{ data_dir }}/mysql.sock"
+
+[mysql]
+no-auto-rehash

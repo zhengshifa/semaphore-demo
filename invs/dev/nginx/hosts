@@ -1,0 +1,17 @@
+[local]
+#localhost ansible_connection=local
+
+###  iam
+[iam_nginx_servers]
+#iam-web1 ansible_host=10.16.10.93
+#iam-web2 ansible_host=10.16.10.94
+web1 ansible_host=127.0.0.1
+web2 ansible_host=127.0.0.1
+#web3 ansible_host=127.0.0.1
+#web4 ansible_host=127.0.0.1
+
+[iam_nginx_servers:vars]
+version=1.26.2
+user=nginx
+group=nginx
+download_url="http://nginx.org/download/nginx-{{ version }}.tar.gz"

@@ -1,0 +1,17 @@
+---
+- name: 升级前备份
+  include_tasks: backup.yml
+
+- name: 升级安装
+  include_tasks: install.yml
+
+- name: 记录更新后的版本
+  lineinfile:
+    path: "{{ version_log_dir }}/version.log"
+    #line: "[UPGRADE] backup ---> {{ backup_filename }} ---> UPGRADE New version: {{ version }}"
+    line: "[UPGRADE] {{ current_version.stdout }} ---> UPGRADE New version: {{ version }}"
+    create: yes
+
+- name: 清理过期备份数据
+  shell: "ls -t {{ backup_dir }}/*.tar.gz | tail -n +{{ max_backups + 1 }} | xargs rm -f"
+  changed_when: false

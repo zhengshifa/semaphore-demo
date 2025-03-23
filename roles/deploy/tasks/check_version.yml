@@ -1,0 +1,84 @@
+
+- name: 获取并提取当前版本信息(如果已经存在)
+  shell: |
+    {{ install_dir }}/sbin/nginx -v 2>&1 | grep -oP 'nginx/\K[0-9.]+'
+  register: after_version
+  changed_when: false
+  ignore_errors: yes
+  when: service == "nginx"
+
+- name: 获取并提取当前版本信息(如果已经存在)
+  shell: |
+    {{ install_dir }}/bin/mysqld -V 2>&1 |  awk '{print $3}'
+  register: after_version
+  changed_when: false
+  ignore_errors: yes
+  when: service == "mysql"
+
+#- name: 版本信息转换成字符串
+#  set_fact:
+#    current_version_str: "{{ current_version.stdout | string }}"
+#    after_version_str: "{{ after_version.stdout | string }}"
+
+- block: # 输出结果
+    - name: 将版本信息记录到文本文件
+      ansible.builtin.lineinfile:
+        path: "{{ version_log_dir }}/version.log"
+        line: "{{ current_time }} - {{ ansible_run_tags }} - after: {{ after_version.stdout }}"
+        create: yes
+
+    - name: 安装
+      debug:
+        msg: "安装成功"
+      when: >
+        not current_version is defined and
+        after_version.stdout is version_compare(version, '==')  and
+        'install' in ansible_run_tags
+
+    - name: 配置
+      debug:
+        msg: "配置更新成功"
+      when: >
+        current_version is defined and
+        after_version.stdout | string is version_compare(current_version.stdout | string, '==')  and
+        'config' in ansible_run_tags
+
+    - name: 升级
+      debug:
+        msg: "版本升级成功"
+      when: >
+        current_version is defined and
+        after_version.stdout | string is version_compare(current_version.stdout | string, '>')  and
+        'upgrade' in ansible_run_tags
+
+    - name: 回滚
+      debug:
+        msg: "版本回滚成功"
+      when: >
+        current_version is defined and
+        after_version.stdout | string is version_compare(current_version.stdout | string, '<')  and
+        'rollback' in ansible_run_tags
+  when: >
+    after_version.stdout is defined and
+    version is defined
+  rescue:
+    - name: 失败
+      debug:
+        msg: "{{ service }} 动作 {{ ansible_run_tags }} 执行失败"
+      failed_when: true
+
+- name: 重新授权目录权限
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ user }}"
+    group: "{{ group }}"
+    mode: 0755
+    recurse: yes
+  with_items:
+    - "{{ install_dir }}"
+    - "{{ conf_dir }}"
+    - "{{ data_dir }}"
+    - "{{ log_dir }}"
+    - "{{ version_log_dir }}"
+    - "{{ backup_dir }}"

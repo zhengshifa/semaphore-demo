@@ -1,0 +1,27 @@
+- name: 回滚软链接更新
+  file:
+    src: "{{ install_dir }}"
+    dest: "{{ install_dir | dirname }}/{{ version }}"
+    state: link
+    force: yes
+
+# 保存回滚信息
+- name: 记录回滚信息
+  lineinfile:
+    path: "{{ version_log_dir }}/version.log"
+    line: "[ROLLBACK] From: {{ current_version.stdout }} To: {{ version }}"
+    create: yes
+
+- name: 重启服务
+  block:
+    - name: Restart 
+      service:
+        name: "{{ service }}@{{ inventory_hostname }}"
+        state: restarted
+      become: yes
+    
+    - name: Verify service status
+      service:
+        name: "{{ service }}@{{ inventory_hostname }}"
+        state: started
+      become: yes

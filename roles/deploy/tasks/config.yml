@@ -1,0 +1,43 @@
+---
+- block: 
+  - name: 配置 nginx.conf
+    template:
+      src: "{{ service }}/nginx.conf.j2"
+      dest: "{{ install_dir }}/conf/nginx.conf"
+      mode: '0644'
+    notify: 
+      - validate nginx config
+      - reload
+
+  - name: 创建相关目录
+    file:
+      path: "{{ install_dir }}/conf/conf.d"
+      state: directory
+      owner: "{{ user }}"
+      group: "{{ group }}"
+      mode: 0755
+
+  - name: 配置 conf.d/nginx.conf
+    template:
+      src: "{{ service }}/{{ inventory_hostname }}-nginx.conf.j2"
+      dest: "{{ install_dir }}/conf/conf.d/nginx.conf"
+      mode: '0644'
+      owner: "{{ user }}"
+      group: "{{ group }}"
+    notify:
+      - validate nginx config
+      - reload
+  ignore_errors: yes
+  when: service == "nginx"
+
+# mysql
+- block: 
+  - name: 生成MySQL配置文件
+    template:
+      src: "{{ service }}/my.cnf.j2"
+      dest: "{{ conf_dir }}/my.cnf"
+      owner: "{{ user }}"
+      group: "{{ group }}"
+      mode: 0644
+    notify: restart
+  when: service == "mysql"

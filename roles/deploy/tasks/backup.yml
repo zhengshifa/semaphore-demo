@@ -1,0 +1,49 @@
+#---
+#- name: 定义备份文件名
+#  set_fact:
+#    backup_filename: "{{ backup_dir }}/{{ service }}-{{ inventory_hostname }}-{{ current_version.stdout }}-{{ ansible_date_time.date }}-{{ (ansible_date_time.hour | int + 8) % 24 }}_{{ ansible_date_time.minute }}_{{ ansible_date_time.second }}.tar.gz"
+#
+#- name: 定义upgrade备份文件名
+#  set_fact:
+#    backup_filename: "{{ backup_dir }}/upgrade-{{ service }}-{{ inventory_hostname }}-{{ current_version.stdout }}-{{ ansible_date_time.date }}-{{ (ansible_date_time.hour | int + 8) % 24 }}_{{ ansible_date_time.minute }}_{{ ansible_date_time.second }}.tar.gz"
+#  when: "'upgrade' in ansible_run_tags"
+#
+#- name: 定义rollback备份文件名
+#  set_fact:
+#    backup_filename: "{{ backup_dir }}/rollback-{{ service }}-{{ inventory_hostname }}-{{ current_version.stdout }}-{{ ansible_date_time.date }}-{{ (ansible_date_time.hour | int + 8) % 24 }}_{{ ansible_date_time.minute }}_{{ ansible_date_time.second }}.tar.gz"
+#  when: "'rollback' in ansible_run_tags"
+#
+#- name: 定义uninstall 前备份文件名
+#  set_fact:
+#    backup_filename: "{{ backup_dir }}/uninstall-{{ service }}-{{ inventory_hostname }}-{{ current_version.stdout }}-{{ ansible_date_time.date }}-{{ (ansible_date_time.hour | int + 8) % 24 }}_{{ ansible_date_time.minute }}_{{ ansible_date_time.second }}.tar.gz"
+#  when: "'uninstall' in ansible_run_tags"
+#
+#- name: 备份应用
+#  archive:
+#    path: "{{ install_dir }}"
+#    dest: "{{ backup_filename }}"
+#    format: gz
+
+# mysql 逻辑数据备份
+- block: 
+  - name: 数据备份脚本
+    template:
+      src: "{{ service }}/backup.sh.j2"
+      dest: "{{ backup_dir }}/backup.sh"
+      mode: '0755'
+
+  - name: 执行一次备份任务
+    shell: "{{ backup_dir }}/backup.sh"
+    become: yes
+  
+  - name: 添加定时任务
+    cron:
+      name: "{{ service }}-{{ inventory_hostname }} 备份任务"
+      job: "{{ backup_dir }}/backup.sh"
+      minute: "{{ backup_cron_schedule.split()[0] }}"
+      hour: "{{ backup_cron_schedule.split()[1] }}"
+      day: "{{ backup_cron_schedule.split()[2] }}"
+      month: "{{ backup_cron_schedule.split()[3] }}"
+      weekday: "{{ backup_cron_schedule.split()[4] }}"
+      user: root
+  when: service == "mysql"

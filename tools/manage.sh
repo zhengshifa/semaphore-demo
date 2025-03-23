@@ -1,7 +1,6 @@
 #!/bin/bash
 
-WORK_DIR=/root/myproj/semaphore-demo
-
+WORK_DIR=/etc/semaphore-demo
 
 export ANSIBLE_CONFIG=${WORK_DIR}/ansible.cfg
 
@@ -40,12 +39,6 @@ if [[ ! "$ENVIRONMENT" =~ ^(dev|prod|test)$ ]]; then
   exit 1
 fi
 
-# 确保服务合法
-if [[ ! "$SERVICE" =~ ^(docker|mysql|nginx)$ ]]; then
-  echo "Invalid service: $SERVICE"
-  exit 1
-fi
-
 # 确保操作合法
 #if [[ ! "$ACTION" =~ ^(install|uninstall|upgrade)$ ]]; then
 #  echo "Invalid action: $ACTION"
@@ -53,7 +46,7 @@ fi
 #fi
 
 # 生成 Ansible 命令
-ANSIBLE_COMMAND="ansible-playbook -i ${WORK_DIR}/invs/$ENVIRONMENT/${SERVICE}-hosts ${WORK_DIR}/playbooks/$SERVICE.yml -t $ACTION"
+ANSIBLE_COMMAND="ansible-playbook -i ${WORK_DIR}/invs/$ENVIRONMENT/${SERVICE}/hosts ${WORK_DIR}/playbooks/manage.yml -t $ACTION --ask-vault-pass -e "service=${SERVICE}" -e "env=${ENVIRONMENT}""
 
 # 打印生成的命令
 echo "Generated Ansible command: $ANSIBLE_COMMAND"

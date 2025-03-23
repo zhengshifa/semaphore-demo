@@ -1,6 +1,0 @@
-# example-playbook.yml
----
-- hosts: all
-  become: yes
-  roles:
-   - role: nginx

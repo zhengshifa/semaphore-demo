@@ -1,0 +1,50 @@
+---
+- name: 初始化安装环境
+  import_tasks: init.yml
+  tags: [install]
+
+- name: pre 获取版本信息
+  import_tasks: get_version.yml
+  tags: [always]
+
+#- name: 调试-调试-调试
+#  debug:
+#    var: current_version.stdout
+##  when: (current_version.stdout | default('')) == ''
+#  tags: [always]
+
+- name: 安装
+  import_tasks: install.yml
+  tags: [install]
+  when: binary_file.files | length == 0
+
+- name: 卸载
+  import_tasks: uninstall.yml
+  tags: [uninstall]
+  when: binary_file.files | length > 0
+
+- name: 升级
+  import_tasks: upgrade.yml
+  tags: [upgrade]
+  when: ( binary_file.files | length > 0 ) and ( current_version.stdout is version_compare(version, '<') )
+
+- name: 回滚
+  import_tasks: rollback.yml
+  tags: [rollback]
+  when: ( binary_file.files | length > 0 ) and ( current_version.stdout is version_compare(version, '>') )
+
+- name: 配置管理
+  import_tasks: config.yml
+  tags: [config,install,upgrade,rollback]
+
+- name: 服务管理
+  import_tasks: service.yml
+  tags: [config,install,upgrade,rollback]
+
+- name: 执行备份
+  import_tasks: backup.yml
+  tags: [backup]
+
+- name: after 获取版本信息
+  import_tasks: check_version.yml
+  tags: [always]

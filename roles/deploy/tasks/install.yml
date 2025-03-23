@@ -1,0 +1,97 @@
+---
+# 通用部分
+- block:
+  - name: 下载安装包
+    get_url:
+      url: "{{ download_url }}"
+      dest: "/tmp/{{ service }}-{{ version }}.tar.gz"
+      timeout: 120  # 增加超时时间为 30 秒
+      mode: '0644'
+    throttle: 1  # 限制同一主机上的任务并发数为 1
+  
+  - name: 解压源码包(需要编译安装)
+    unarchive:
+      src: "/tmp/{{ service }}-{{ version }}.tar.gz"
+      dest: "{{ install_dir | dirname }}"
+      remote_src: yes
+    throttle: 1  # 限制同一主机上的任务并发数为 1
+
+# nginx 
+- block: 
+  - name: 配置和编译安装
+    shell: |
+      cd {{ install_dir | dirname }}/{{ service }}-{{ version }} && ./configure {{ nginx_configure_options }}
+      make && make install
+    throttle: 1  # 限制同一主机上的任务并发数为 1
+  - name: 创建链接目录
+    file:
+      src: "{{ install_dir }}"
+      dest: "{{ install_dir | dirname }}/{{ version }}"
+      state: link
+  when: service == "nginx"
+
+# mysql
+- block: 
+  - name: 移动应用到安装目录
+    shell: |
+      mv {{ install_dir | dirname }}/mysql-{{ version }}-linux-glibc2.12-x86_64 {{ install_dir | dirname }}/{{ version }}
+
+  - name: 创建链接目录
+    file:
+      src: "{{ install_dir }}"
+      dest: "{{ install_dir | dirname }}/{{ version }}"
+      state: link
+
+  - name: 初始化数据库
+    command: "{{ install_dir }}/bin/mysqld --initialize-insecure --user={{ user}}  --basedir={{ install_dir }} --datadir={{ data_dir }}"
+    become: yes
+
+  - name: 加载mysql配置
+    include_tasks: config.yml
+
+  - name: 加载服务配置
+    include_tasks: service.yml
+
+  # 数据库初始化任务
+  - name: 设置root密码
+    mysql_user:
+      login_user: root
+      login_password: ""
+      name: root
+      password: "{{ mysql_root_password }}"
+      check_implicit_admin: yes
+      host: localhost
+
+  - name: 执行安全加固
+    community.mysql.mysql_query:
+      login_user: root
+      login_password: "{{ mysql_root_password }}"
+      query: 
+        - "DELETE FROM mysql.user WHERE User='';"
+        - "DROP DATABASE IF EXISTS test;"
+        - "FLUSH PRIVILEGES;"
+
+  - name: 创建应用数据库
+    mysql_db:
+      login_user: root
+      login_password: "{{ mysql_root_password }}"
+      name: "{{ item.name }}"
+      encoding: "{{ item.encoding | default('utf8mb4') }}"
+      collation: "{{ item.collation | default('utf8mb4_general_ci') }}"
+      state: present
+    loop: "{{ mysql_databases }}"
+    when: mysql_databases | length > 0
+
+  - name: 创建数据库用户
+    mysql_user:
+      login_user: root
+      login_password: "{{ mysql_root_password }}"
+      name: "{{ item.name }}"
+      password: "{{ item.password }}"
+      priv: "{{ item.priv }}"
+      host: "{{ item.host | default('%') }}"
+      state: present
+    loop: "{{ mysql_users }}"
+    when: mysql_users | length > 0
+
+  when: service == "mysql"

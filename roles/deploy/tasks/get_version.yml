@@ -1,0 +1,28 @@
+- name: 检查二进制文件是否存在
+  find:
+    paths: "{{ install_dir }}"
+    patterns: "{{ service }}"
+    recurse: yes
+  register: binary_file
+
+- name: 获取并提取当前版本信息(如果已经存在)
+  shell: |
+    {% if service == "nginx" %}
+      {{ install_dir }}/sbin/nginx -v 2>&1 | grep -oP 'nginx/\K[0-9.]+'
+    {% elif service == "mysql" %}
+      {{ install_dir }}/bin/mysqld -V 2>&1 | awk '{print $3}'
+    {% endif %}
+  register: current_version
+  changed_when: false
+  when: binary_file.files | length > 0
+
+- name: 获取当前时间
+  set_fact:
+    current_time: "{{ ansible_date_time.date }}-{{ (ansible_date_time.hour | int + 8) % 24 }}_{{ ansible_date_time.minute }}_{{ ansible_date_time.second }}"
+
+- name: 将版本信息记录到文本文件
+  ansible.builtin.lineinfile:
+    path: "{{ version_log_dir }}/version.log"
+    line: "{{ current_time }} - {{ ansible_run_tags }} - pre: {{ current_version.stdout | default('') }}"
+    create: yes
+  when: binary_file.files | length > 0

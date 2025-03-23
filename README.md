@@ -17,3 +17,41 @@ Usage: myproj/semaphore-demo/tools/manage.sh -e <environment> -s <service> -a <a
   -e <environment>  : Environment (dev, prod, test)
   -s <service>      : Service (docker, mysql, nginx)
   -a <action>       : Action (install, uninstall, upgrade)
+
+
+#
+部署：
+单机架构
+高可用架构
+容灾架构
+
+升级
+回滚
+卸载
+配置管理
+
+备份/恢复：
+逻辑备份
+物理备份
+异地归档
+
+
+监控
+界面监控
+接口监控
+进程监控
+端口监控
+功能监控
+性能监控
+日志监控
+安全监控
+系统监控
+数据库监控
+
+
+测试：
+界面测试
+接口测试
+进程测试
+端口测试
+功能测试

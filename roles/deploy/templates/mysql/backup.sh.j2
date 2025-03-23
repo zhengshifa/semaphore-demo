@@ -1,0 +1,24 @@
+#!/bin/bash
+# MySQL 逻辑备份脚本
+# 备份目录
+BACKUP_DIR={{ backup_dir }}
+# 备份文件名
+BACKUP_FILE="${BACKUP_DIR}/{{ inventory_hostname }}_all_databases_$(date +%Y%m%d_%H%M%S).tar.gz"
+# 保存天数
+DAYS={{  max_backups }}
+
+# 创建备份目录
+mkdir -p ${BACKUP_DIR}
+
+# 执行备份
+mysqldump -u root -p{{ mysql_root_password }} -A -R -E --triggers --master-data=2 --single-transaction  |gzip > ${BACKUP_FILE}.tar.gz
+
+# 检查备份是否成功
+if [ $? -eq 0 ]; then
+    echo "MySQL备份成功,文件保存在: ${BACKUP_FILE}" >> ${BACKUP_DIR}/{{ inventory_hostname }}_mysql_cron_bak.log
+else
+    echo "MySQL备份失败,请检查错误日志。" >> ${BACKUP_DIR}/{{ inventory_hostname }}_mysql_cron_bak.log
+    exit 1
+fi
+
+find $BACKUP_DIR -name "*.tar.gz" -type f -mtime +${DAYS} | xargs rm

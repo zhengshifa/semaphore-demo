@@ -1,0 +1,19 @@
+---
+- name: 停止服务
+  systemd:
+    name: "{{ service }}@{{ inventory_hostname }}"
+    state: stop
+  ignore_errors: yes
+
+- name: 卸载前备份
+  include_tasks: backup.yml
+
+- name: 删除相关目录
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+  - "{{ install_dir }}" 
+  - "{{ conf_dir }}" 
+  - "{{ data_dir }}" 
+  - "{{ log_dir }}"
