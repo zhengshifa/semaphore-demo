@@ -31,6 +31,21 @@
       force: yes
   when: service == "nginx"
 
+# haproxy
+- block: 
+  - name: 配置和编译安装
+    shell: |
+      cd {{ install_dir | dirname }}/{{ service }}-{{ version }}
+      make TARGET=linux-glibc USE_OPENSSL=1 USE_ZLIB=1 USE_PCRE=1 USE_SYSTEMD=1 && make install PREFIX={{ install_dir | dirname }}/{{ version }}
+    throttle: 1  # 限制同一主机上的任务并发数为 1
+  - name: 创建链接目录
+    file:
+      src: "{{ install_dir | dirname }}/{{ version }}"
+      dest: "{{ install_dir }}"
+      state: link
+      force: yes
+  when: service == "haproxy"
+
 # mysql
 - block: 
   - name: 移动应用到安装目录

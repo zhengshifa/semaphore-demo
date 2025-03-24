@@ -1,0 +1,14 @@
+[Unit]
+Description=HAProxy Load Balancer  {{ inventory_hostname }}
+After=network.target
+
+[Service]
+ExecStart={{ install_dir }}/sbin/haproxy -f {{ conf_dir }}/haproxy.cfg
+ExecReload={{ install_dir }}/sbin/haproxy -f {{ conf_dir }}/haproxy.cfg
+ExecStop=/bin/kill -TERM $MAINPID
+Restart=on-failure
+User=haproxy
+Group=haproxy
+
+[Install]
+WantedBy=multi-user.target

@@ -11,6 +11,8 @@
       {{ install_dir }}/sbin/nginx -v 2>&1 | grep -oP 'nginx/\K[0-9.]+'
     {% elif service == "mysql" %}
       {{ install_dir }}/bin/mysqld -V 2>&1 | awk '{print $3}'
+    {% elif service == "haproxy" %}
+      {{ install_dir }}/sbin/haproxy -v 2>&1 |head -1| awk '{print $3}' | awk -F'-' '{print $1}'
     {% endif %}
   register: current_version
   changed_when: false

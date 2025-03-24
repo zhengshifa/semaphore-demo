@@ -1,0 +1,11 @@
+[iam_haproxy_servers]
+#iam-web1 ansible_host=10.16.10.93
+#iam-web2 ansible_host=10.16.10.94
+haproxy01 ansible_host=127.0.0.1
+haproxy02 ansible_host=127.0.0.1
+
+[iam_haproxy_servers:vars]
+user=haproxy
+group=haproxy
+version=3.1.0
+download_url="https://www.haproxy.org/download/3.1/src/haproxy-{{ version }}.tar.gz"

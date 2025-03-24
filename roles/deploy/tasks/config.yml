@@ -41,3 +41,15 @@
       mode: 0644
     notify: restart
   when: service == "mysql"
+
+# haproxy
+- block: 
+  - name: 生成haproxy配置文件
+    template:
+      src: "{{ service }}/haproxy.cfg.j2"
+      dest: "{{ conf_dir }}/haproxy.cfg"
+      owner: "{{ user }}"
+      group: "{{ group }}"
+      mode: 0644
+    notify: restart
+  when: service == "haproxy"

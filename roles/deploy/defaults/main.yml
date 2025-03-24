@@ -6,25 +6,6 @@ log_dir: "/var/log/{{ service }}/{{ inventory_hostname }}"
 version_log_dir: "/var/log/version_log/{{ service }}/{{ inventory_hostname }}"
 backup_dir: "/data/backup/{{ service }}/{{ inventory_hostname }}"
 
-# mysql
-port: 3306
-mysql_bind_address: 0.0.0.0
-mysql_databases: []
-mysql_users: []
-mysql_root_password: "{{ vault_mysql_root_password }}"
-
-# Compile options
-nginx_configure_options: >
-  --prefix={{ install_dir | dirname }}/{{ version }}
-  --user={{ user }}
-  --group={{ group }}
-  --with-http_ssl_module
-  --with-http_v2_module
-  --with-http_realip_module
-  --with-http_stub_status_module
-  --with-pcre
-  --with-threads
-
 # Backup settings
 max_backups: 10
 

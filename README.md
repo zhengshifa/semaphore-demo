@@ -35,7 +35,6 @@ Usage: myproj/semaphore-demo/tools/manage.sh -e <environment> -s <service> -a <a
 物理备份
 异地归档
 
-
 监控
 界面监控
 接口监控
@@ -51,7 +50,16 @@ Usage: myproj/semaphore-demo/tools/manage.sh -e <environment> -s <service> -a <a
 
 测试：
 界面测试
-接口测试
 进程测试
 端口测试
 功能测试
+接口测试
+进程测试
+性能测试
+日志测试
+安全测试
+系统测试
+集群状态
+主从状态
+
+调试

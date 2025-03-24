@@ -1,0 +1,30 @@
+global
+    log {{ log_dir }}    local0
+    log {{ log_dir }}    local1 notice
+    chroot {{ install_dir }}/haproxy
+    stats socket {{ install_dir }}/haproxy.sock mode 660 level admin
+    stats timeout 30s
+    user {{ user }}
+    group {{ group }}
+    daemon
+    pidfile {{ install_dir }}/haproxy.pid  # 指定 PID 文件路径
+
+defaults
+    log     global
+    mode    http
+    option  httplog
+    option  dontlognull
+    timeout connect 5000ms
+    timeout client  50000ms
+    timeout server  50000ms
+    errorfile 400 {{ install_dir }}/errors/400.http
+    errorfile 403 {{ install_dir }}/errors/403.http
+
+frontend http_front
+    bind *:80
+    default_backend http_back
+
+backend http_back
+    balance roundrobin
+    server web1 192.168.1.101:80 check
+    server web2 192.168.1.102:80 check

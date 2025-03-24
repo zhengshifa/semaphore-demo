@@ -11,7 +11,9 @@ web2 ansible_host=127.0.0.1
 #web4 ansible_host=127.0.0.1
 
 [iam_nginx_servers:vars]
-version=1.26.4
+version=1.26.0
 user=nginx
 group=nginx
 download_url="http://nginx.org/download/nginx-{{ version }}.tar.gz"
+# Compile options
+nginx_configure_options="--prefix={{ install_dir | dirname }}/{{ version }} --user={{ user }} --group={{ group }} --with-http_ssl_module --with-http_v2_module --with-http_realip_module --with-http_stub_status_module --with-pcre --with-threads"
