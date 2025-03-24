@@ -61,20 +61,3 @@
       debug:
         msg: "{{ service }} 动作 {{ ansible_run_tags }} 执行失败"
       failed_when: true
-
-- name: 重新授权目录权限
-  file:
-    path: "{{ item }}"
-    state: directory
-    owner: "{{ user }}"
-    group: "{{ group }}"
-    mode: 0755
-    recurse: yes
-  with_items:
-    - "{{ install_dir }}"
-    - "{{ conf_dir }}"
-    - "{{ data_dir }}"
-    - "{{ log_dir }}"
-    - "{{ version_log_dir }}"
-    - "{{ backup_dir }}"
-  when: not "'uninstall' in ansible_run_tags"

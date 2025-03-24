@@ -13,6 +13,7 @@
     unarchive:
       src: "/tmp/{{ service }}-{{ version }}.tar.gz"
       dest: "{{ install_dir | dirname }}"
+      mode: '0755'                # 设置文件权限
       remote_src: yes
     throttle: 1  # 限制同一主机上的任务并发数为 1
 
@@ -112,3 +113,19 @@
     when: mysql_users | length > 0
 
   when: service == "mysql"
+
+- name: 目录权限调整
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ user }}"
+    group: "{{ group }}"
+    mode: 0755
+    recurse: yes
+  with_items:
+    - "{{ install_dir }}"
+    - "{{ conf_dir }}"
+    - "{{ data_dir }}"
+    - "{{ log_dir }}"
+    - "{{ version_log_dir }}"
+    - "{{ backup_dir }}"

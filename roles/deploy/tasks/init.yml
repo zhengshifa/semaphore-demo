@@ -11,6 +11,7 @@
     state: present
   become: yes
   when: ansible_os_family == "RedHat"
+  throttle: 1  # 限制同一主机上的任务并发数为 1
 
 - name: 创建用户组
   group:
