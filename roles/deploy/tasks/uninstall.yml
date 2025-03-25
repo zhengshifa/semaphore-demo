@@ -15,5 +15,7 @@
   with_items:
   - "{{ install_dir }}" 
   - "{{ conf_dir }}" 
-  - "{{ data_dir }}" 
   - "{{ log_dir }}"
+
+- name: 数据目录重命名
+  shell: "mv {{ data_dir }} {{ data_dir }}_{{ current_time }}_bak"

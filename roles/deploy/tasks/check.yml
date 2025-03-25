@@ -1,0 +1,9 @@
+- name: Check the status of a service
+  systemd:
+    name: {{ service }}@{{ inventory_hostname }}
+    state: started
+  register: service_status
+
+- name: Debug the service status
+  debug:
+    var: service_status

@@ -14,6 +14,8 @@
       src: "/tmp/{{ service }}-{{ version }}.tar.gz"
       dest: "{{ install_dir | dirname }}"
       mode: '0755'                # 设置文件权限
+      owner: "{{ user }}"  # 设置属主
+      group: "{{ group }}"  # 设置属组
       remote_src: yes
     throttle: 1  # 限制同一主机上的任务并发数为 1
 
@@ -47,6 +49,8 @@
       dest: "{{ install_dir }}"
       state: link
       force: yes
+      owner: "{{ user }}"  # 设置属主
+      group: "{{ group }}"  # 设置属组
   when: service == "haproxy"
 
 # mysql
@@ -61,6 +65,8 @@
       dest: "{{ install_dir }}"
       state: link
       force: yes
+      owner: "{{ user }}"  # 设置属主
+      group: "{{ group }}"  # 设置属组
 
   - name: 初始化数据库
     command: "{{ install_dir }}/bin/mysqld --initialize-insecure --user={{ user}}  --basedir={{ install_dir }} --datadir={{ data_dir }}"
@@ -115,3 +121,11 @@
     when: mysql_users | length > 0
 
   when: service == "mysql"
+
+- name: 递归设置子目录和文件的属主和属组
+  file:
+    path: "{{ install_dir | dirname }}/{{ version }}"  # 解压后的目标目录
+    owner: "{{ user }}"  # 设置属主
+    group: "{{ group }}"  # 设置属组
+    recurse: yes  # 递归设置子目录和文件
+    mode: '0755'

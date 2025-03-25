@@ -48,3 +48,7 @@
 - name: after 获取版本信息
   import_tasks: check_version.yml
   tags: [always]
+
+- name: 服务检查
+  import_tasks: check.yml
+  tags: [check]
