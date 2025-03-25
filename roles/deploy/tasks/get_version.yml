@@ -20,7 +20,8 @@
 
 - name: 获取当前时间
   set_fact:
-    current_time: "{{ ansible_date_time.date }}-{{ (ansible_date_time.hour | int + 8) % 24 }}_{{ ansible_date_time.minute }}_{{ ansible_date_time.second }}"
+    #current_time: "{{ ansible_date_time.date }}-{{ (ansible_date_time.hour | int + 8) % 24 }}_{{ ansible_date_time.minute }}_{{ ansible_date_time.second }}"
+    current_time: "{{ ansible_date_time.date }}-{{ ansible_date_time.hour }}_{{ ansible_date_time.minute }}_{{ ansible_date_time.second }}"
 
 - name: 将版本信息记录到文本文件
   ansible.builtin.lineinfile:

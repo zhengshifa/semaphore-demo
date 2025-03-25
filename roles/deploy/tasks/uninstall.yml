@@ -2,7 +2,7 @@
 - name: 停止服务
   systemd:
     name: "{{ service }}@{{ inventory_hostname }}"
-    state: stop
+    state: stopped
   ignore_errors: yes
 
 - name: 卸载前备份

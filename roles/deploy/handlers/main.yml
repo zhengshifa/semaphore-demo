@@ -16,6 +16,6 @@
 
 
 - name: validate nginx configuration
-  command: "{{ nginx_install_dir }}/sbin/nginx -t"
+  command: "{{ install_dir }}/sbin/nginx -t"
   register: nginx_validate
   listen: "validate nginx config"

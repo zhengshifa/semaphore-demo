@@ -30,6 +30,8 @@
       dest: "{{ install_dir }}"
       state: link
       force: yes
+      owner: "{{ user }}"  # 设置属主
+      group: "{{ group }}"  # 设置属组
   when: service == "nginx"
 
 # haproxy
@@ -113,19 +115,3 @@
     when: mysql_users | length > 0
 
   when: service == "mysql"
-
-- name: 目录权限调整
-  file:
-    path: "{{ item }}"
-    state: directory
-    owner: "{{ user }}"
-    group: "{{ group }}"
-    mode: 0755
-    recurse: yes
-  with_items:
-    - "{{ install_dir }}"
-    - "{{ conf_dir }}"
-    - "{{ data_dir }}"
-    - "{{ log_dir }}"
-    - "{{ version_log_dir }}"
-    - "{{ backup_dir }}"

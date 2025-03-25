@@ -19,7 +19,7 @@
     - name: 将版本信息记录到文本文件
       ansible.builtin.lineinfile:
         path: "{{ version_log_dir }}/version.log"
-        line: "{{ current_time }} - {{ ansible_run_tags }} - after: {{ after_version.stdout }}"
+        line: "{{ current_time }} - {{ ansible_run_tags }} - after: {{ after_version.stdout }}\n"
         create: yes
 
     - name: 安装
