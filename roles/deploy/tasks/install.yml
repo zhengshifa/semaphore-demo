@@ -4,14 +4,19 @@
   - name: 下载安装包
     get_url:
       url: "{{ download_url }}"
-      dest: "/tmp/{{ service }}-{{ version }}.tar.gz"
+      dest: "/tmp/"
       timeout: 120  # 增加超时时间为 30 秒
       mode: '0644'
     throttle: 1  # 限制同一主机上的任务并发数为 1
-  
+    register: download_result
+
+  - name: 显示实际下载路径
+    debug:
+      msg: "文件下载到 {{ download_result.dest }}"
+
   - name: 解压源码包
     unarchive:
-      src: "/tmp/{{ service }}-{{ version }}.tar.gz"
+      src: "{{ download_result.dest }}"
       dest: "{{ install_dir | dirname }}"
       mode: '0755'                # 设置文件权限
       owner: "{{ user }}"  # 设置属主

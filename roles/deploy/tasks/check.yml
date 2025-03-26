@@ -1,9 +1,27 @@
 - name: Check the status of a service
   systemd:
-    name: {{ service }}@{{ inventory_hostname }}
+    name: "{{ service }}@{{ inventory_hostname }}"
     state: started
   register: service_status
 
 - name: Debug the service status
   debug:
-    var: service_status
+    var: service_status.state
+
+- name: Check if a process is running
+  shell: "pgrep -f '{{ service }}'"
+  register: process_status
+  ignore_errors: yes
+
+- name: Debug the process status
+  debug:
+    var: process_status
+
+- name: Check if a port is in use
+  shell: "ss -tuln | grep ':{{ port }}'"
+  register: port_status
+  ignore_errors: yes
+
+- name: Debug the port status
+  debug:
+    var: port_status
