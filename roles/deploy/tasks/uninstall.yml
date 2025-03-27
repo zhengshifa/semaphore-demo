@@ -1,12 +1,12 @@
 ---
+#- name: 卸载前备份
+#  include_tasks: backup.yml
+
 - name: 停止服务
   systemd:
     name: "{{ service }}@{{ inventory_hostname }}"
     state: stopped
   ignore_errors: yes
-
-- name: 卸载前备份
-  include_tasks: backup.yml
 
 - name: 删除相关目录
   file:

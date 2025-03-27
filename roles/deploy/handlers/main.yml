@@ -1,4 +1,3 @@
-# nginx-mng/handlers/main.yml
 ---
 - name: restart
   systemd:

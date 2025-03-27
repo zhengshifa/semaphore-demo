@@ -1,11 +1,11 @@
 [mysqld]
 # 基础配置
 user={{ user }}
-group={{ group }}
-port = {{ port }}
-bind-address = {{ mysql_bind_address }}
-datadir= {{ data_dir }}
-socket="{{ data_dir }}/mysql.sock"
+port ={{ port }}
+bind-address ={{ mysql_bind_address }}
+datadir={{ data_dir }}
+socket={{ data_dir }}/mysql.sock
+mysqlx=0
 
 # 连接配置
 max_connections=1000

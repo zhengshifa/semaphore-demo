@@ -62,7 +62,7 @@
 - block: 
   - name: 移动应用到安装目录
     shell: |
-      mv {{ install_dir | dirname }}/mysql-{{ version }}-linux-glibc2.12-x86_64 {{ install_dir | dirname }}/{{ version }}
+     rm -rf  {{ install_dir | dirname }}/{{ version }} &&  mv  {{ install_dir | dirname }}/mysql-{{ version }}-linux-glibc2.12-x86_64 {{ install_dir | dirname }}/{{ version }}
 
   - name: 创建链接目录
     file:
@@ -84,47 +84,42 @@
     include_tasks: service.yml
 
   # 数据库初始化任务
-  - name: 设置root密码
-    mysql_user:
-      login_user: root
-      login_password: ""
-      name: root
-      password: "{{ mysql_root_password }}"
-      check_implicit_admin: yes
-      host: localhost
+  - name: 设置 root 密码
+    shell: |
+      {{ install_dir }}/bin/mysqladmin -u root password {{ mysql_root_password }} -S {{ data_dir }}/mysql.sock
+    ignore_errors: yes
+    register: set_password
+    changed_when: "'already' not in set_password.stderr"
+    no_log: true
 
   - name: 执行安全加固
-    community.mysql.mysql_query:
-      login_user: root
-      login_password: "{{ mysql_root_password }}"
-      query: 
-        - "DELETE FROM mysql.user WHERE User='';"
-        - "DROP DATABASE IF EXISTS test;"
-        - "FLUSH PRIVILEGES;"
+    shell: |
+      {{ install_dir }}/bin/mysql -u root -p"{{ mysql_root_password }}" -e "
+        DELETE FROM mysql.user WHERE User='';
+        DROP DATABASE IF EXISTS test;
+        FLUSH PRIVILEGES;"
+    no_log: true
 
   - name: 创建应用数据库
-    mysql_db:
-      login_user: root
-      login_password: "{{ mysql_root_password }}"
-      name: "{{ item.name }}"
-      encoding: "{{ item.encoding | default('utf8mb4') }}"
-      collation: "{{ item.collation | default('utf8mb4_general_ci') }}"
-      state: present
+    shell: |
+      {{ install_dir }}/bin/mysql -u root -p"{{ mysql_root_password }}" -e "
+        CREATE DATABASE IF NOT EXISTS {{ item.name }}
+        CHARACTER SET {{ item.encoding | default('utf8mb4') }}
+        COLLATE {{ item.collation | default('utf8mb4_general_ci') }};"
+    no_log: true
     loop: "{{ mysql_databases }}"
     when: mysql_databases | length > 0
 
   - name: 创建数据库用户
-    mysql_user:
-      login_user: root
-      login_password: "{{ mysql_root_password }}"
-      name: "{{ item.name }}"
-      password: "{{ item.password }}"
-      priv: "{{ item.priv }}"
-      host: "{{ item.host | default('%') }}"
-      state: present
+    shell: |
+      {{ install_dir }}/bin/mysql -u root -p"{{ mysql_root_password }}" -e "
+        CREATE USER IF NOT EXISTS '{{ item.name }}'@'{{ item.host | default('%') }}' 
+        IDENTIFIED BY '{{ item.password }}';
+        GRANT {{ item.priv }} ON *.* TO '{{ item.name }}'@'{{ item.host | default('%') }}';
+        FLUSH PRIVILEGES;"
+    no_log: true
     loop: "{{ mysql_users }}"
     when: mysql_users | length > 0
-
   when: service == "mysql"
 
 - name: 递归设置子目录和文件的属主和属组
