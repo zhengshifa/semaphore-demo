@@ -1,17 +1,17 @@
 - name: 检查二进制文件是否存在
   find:
     paths: "{{ install_dir }}"
-    patterns: "{{ service }}"
+    patterns: "{{ ex_service }}"
     recurse: yes
   register: binary_file
 
 - name: 获取并提取当前版本信息(如果已经存在)
   shell: |
-    {% if service == "nginx" %}
+    {% if ex_service == "nginx" %}
       {{ install_dir }}/sbin/nginx -v 2>&1 | grep -oP 'nginx/\K[0-9.]+'
-    {% elif service == "mysql" %}
+    {% elif ex_service == "mysql" %}
       {{ install_dir }}/bin/mysqld -V 2>&1 | awk '{print $3}'
-    {% elif service == "haproxy" %}
+    {% elif ex_service == "haproxy" %}
       {{ install_dir }}/sbin/haproxy -v 2>&1 |head -1| awk '{print $3}' | awk -F'-' '{print $1}'
     {% endif %}
   register: current_version
@@ -26,6 +26,5 @@
 - name: 将版本信息记录到文本文件
   ansible.builtin.lineinfile:
     path: "{{ version_log_dir }}/version.log"
-    line: "{{ current_time }} - {{ ansible_run_tags }} - pre: {{ current_version.stdout | default('') }}"
+    line: "{{ current_time }} - {{ ansible_run_tags }} - {{ location }}: {{ current_version.stdout | default('未安装') }}"
     create: yes
-  when: binary_file.files | length > 0

@@ -1,7 +1,7 @@
 ---
 - name: restart
   systemd:
-    name: "{{ service }}@{{ inventory_hostname }}"
+    name: "{{ ex_service }}@{{ inventory_hostname }}"
     state: restarted
     daemon_reload: yes
   become: yes
@@ -9,7 +9,7 @@
 
 - name: reload
   systemd:
-    name: "{{ service }}@{{ inventory_hostname }}"
+    name: "{{ ex_service }}@{{ inventory_hostname }}"
     state: reloaded
   listen: "reload"
 

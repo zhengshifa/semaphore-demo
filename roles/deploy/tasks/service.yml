@@ -1,8 +1,8 @@
 ---
 - name: 创建systemd管理
   template:
-    src: "{{ service }}/service.j2"
-    dest: "/etc/systemd/system/{{ service }}@{{ inventory_hostname }}.service"
+    src: "{{ ex_service }}/service.j2"
+    dest: "/etc/systemd/system/{{ ex_service }}@{{ inventory_hostname }}.service"
     owner: "{{ user }}"
     group: "{{ group }}"
     mode: '0644'
@@ -11,6 +11,6 @@
 
 - name: 设置开机启动
   systemd:
-    name: "{{ service }}@{{ inventory_hostname }}"
+    name: "{{ ex_service }}@{{ inventory_hostname }}"
     enabled: yes
   become: yes

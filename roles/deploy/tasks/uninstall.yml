@@ -4,8 +4,15 @@
 
 - name: 停止服务
   systemd:
-    name: "{{ service }}@{{ inventory_hostname }}"
+    name: "{{ ex_service }}@{{ inventory_hostname }}"
     state: stopped
+  ignore_errors: yes
+
+- name: 停止并禁用服务
+  systemd:
+    name: "{{ ex_service }}@{{ inventory_hostname }}"
+    state: stopped
+    enabled: no  # 这会禁用服务，防止开机自启动
   ignore_errors: yes
 
 - name: 删除相关目录

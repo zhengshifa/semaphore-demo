@@ -5,12 +5,6 @@
 - name: 升级安装
   include_tasks: install.yml
 
-- name: 记录更新后的版本
-  lineinfile:
-    path: "{{ version_log_dir }}/version.log"
-    line: "{{ current_time }} - [UPGRADE] - {{ version }}"
-    create: yes
-
 - name: 清理过期备份数据
   shell: "ls -t {{ backup_dir }}/*.tar.gz | tail -n +{{ max_backups + 1 }} | xargs rm -f"
   changed_when: false

@@ -5,23 +5,16 @@
     state: link
     force: yes
 
-# 保存回滚信息
-- name: 记录回滚信息
-  lineinfile:
-    path: "{{ version_log_dir }}/version.log"
-    line: "{{ current_time }} - [ROLLBACK] - {{ version }}"
-    create: yes
-
 - name: 重启服务
   block:
     - name: Restart 
       service:
-        name: "{{ service }}@{{ inventory_hostname }}"
+        name: "{{ ex_service }}@{{ inventory_hostname }}"
         state: restarted
       become: yes
     
     - name: Verify service status
       service:
-        name: "{{ service }}@{{ inventory_hostname }}"
+        name: "{{ ex_service }}@{{ inventory_hostname }}"
         state: started
       become: yes

@@ -28,7 +28,7 @@
 - block: 
   - name: 配置和编译安装
     shell: |
-      cd {{ install_dir | dirname }}/{{ service }}-{{ version }} && ./configure {{ nginx_configure_options }}
+      cd {{ install_dir | dirname }}/{{ ex_service }}-{{ version }} && ./configure {{ nginx_configure_options }}
       make && make install
     throttle: 1  # 限制同一主机上的任务并发数为 1
   - name: 创建链接目录
@@ -39,13 +39,13 @@
       force: yes
       owner: "{{ user }}"  # 设置属主
       group: "{{ group }}"  # 设置属组
-  when: service == "nginx"
+  when: ex_service == "nginx"
 
 # haproxy
 - block: 
   - name: 配置和编译安装
     shell: |
-      cd {{ install_dir | dirname }}/{{ service }}-{{ version }}
+      cd {{ install_dir | dirname }}/{{ ex_service }}-{{ version }}
       make TARGET=linux-glibc USE_OPENSSL=1 USE_ZLIB=1 USE_PCRE=1 USE_SYSTEMD=1 && make install PREFIX={{ install_dir | dirname }}/{{ version }}
     throttle: 1  # 限制同一主机上的任务并发数为 1
   - name: 创建链接目录
@@ -56,7 +56,7 @@
       force: yes
       owner: "{{ user }}"  # 设置属主
       group: "{{ group }}"  # 设置属组
-  when: service == "haproxy"
+  when: ex_service == "haproxy"
 
 # mysql
 - block: 
@@ -120,7 +120,7 @@
     no_log: true
     loop: "{{ mysql_users }}"
     when: mysql_users | length > 0
-  when: service == "mysql"
+  when: ex_service == "mysql"
 
 - name: 递归设置子目录和文件的属主和属组
   file:

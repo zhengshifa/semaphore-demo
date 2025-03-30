@@ -5,13 +5,9 @@
 
 - name: pre 获取版本信息
   import_tasks: get_version.yml
+  vars:
+    location: "pre"
   tags: [always]
-
-#- name: 调试-调试-调试
-#  debug:
-#    var: current_version.stdout
-##  when: (current_version.stdout | default('')) == ''
-#  tags: [always]
 
 - name: 安装
   import_tasks: install.yml
@@ -45,10 +41,12 @@
   import_tasks: backup.yml
   tags: [backup]
 
-- name: after 获取版本信息
-  import_tasks: check_version.yml
-  tags: [always]
-
 - name: 服务检查
   import_tasks: check.yml
   tags: [check]
+
+- name: after 获取版本信息
+  import_tasks: get_version.yml
+  vars:
+    location: "after"
+  tags: [always]

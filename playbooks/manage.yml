@@ -1,7 +1,7 @@
 ---
 - hosts: all
   vars_files:
-    - "../invs/{{ env }}/{{ service }}/secrets.yml"
+    - "../invs/{{ ex_env }}/{{ ex_service }}/secrets.yml"
   become: yes
   roles:
     - deploy

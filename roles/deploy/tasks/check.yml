@@ -1,27 +1,134 @@
-- name: Check the status of a service
-  systemd:
-    name: "{{ service }}@{{ inventory_hostname }}"
-    state: started
-  register: service_status
+# 通用测试
+- block: 
+  - name: Check the status of a service
+    systemd:
+      name: "{{ ex_service }}@{{ inventory_hostname }}"
+      state: started
+    register: service_status
+  
+  - name: Debug the service status
+    debug:
+      var: service_status.state
+  
+  - name: Check if a process is running
+    shell: "pgrep -f '{{ ex_service }}'"
+    register: process_status
+    ignore_errors: yes
+  
+  - name: Debug the process status
+    debug:
+      var: process_status
+  
+  - name: Check if a port is in use
+    shell: "ss -tuln | grep ':{{ port }}'"
+    register: port_status
+    ignore_errors: yes
+  
+  - name: Debug the port status
+    debug:
+      var: port_status  
 
-- name: Debug the service status
-  debug:
-    var: service_status.state
+# 功能测试
+- block: 
+  # Redis 检测
+  - name: 验证Redis服务响应
+    ansible.builtin.command: >-
+      redis-cli -h {{ ansible_host | default('localhost') }}
+      -p {{ redis_port | default(6379) }}
+      {% if redis_password is defined %} -a {{ redis_password }} {% endif %}
+      ping
+    when: ex_service == "redis"
+    no_log: true
+    register: redis_check
+    changed_when: "'PONG' in redis_check.stdout"
 
-- name: Check if a process is running
-  shell: "pgrep -f '{{ service }}'"
-  register: process_status
-  ignore_errors: yes
+  # PostgreSQL 检测
+  - name: 验证PostgreSQL连接
+    ansible.builtin.shell: >-
+      PGPASSWORD={{ pg_password | default('') }} psql -h {{ ansible_host | default('localhost') }}
+      -p {{ pg_port | default(5432) }}
+      -U {{ pg_user | default('postgres') }}
+      -c "SELECT version();"
+    when: ex_service == "postgresql"
+    no_log: true
+    register: pg_check
+    changed_when: false
+    
+  # RabbitMQ 检测
+  - name: 检查RabbitMQ端口开放
+    ansible.builtin.wait_for:
+      host: "{{ ansible_host | default('localhost') }}"
+      port: "{{ rabbitmq_port | default(5672) }}"
+      timeout: 5
+    when: ex_service == "rabbitmq"
 
-- name: Debug the process status
-  debug:
-    var: process_status
+  # MySQL 8.0+ 检测
+  - name: 验证MySQL基础功能
+    ansible.builtin.command: >-
+      mysql -h {{ ansible_host | default('localhost') }}
+      -P {{ port | default(3306) }}
+      -u {{ mysql_user | default('root') }}
+      -p{{ mysql_root_password }}
+      -e "SELECT @@version;"
+    when: ex_service == "mysql"
+    no_log: false
+    register: mysql_check
+    changed_when: false
 
-- name: Check if a port is in use
-  shell: "ss -tuln | grep ':{{ port }}'"
-  register: port_status
-  ignore_errors: yes
+  # Kafka 检测
+  - name: 检查Kafka端口开放
+    ansible.builtin.wait_for:
+      host: "{{ ansible_host | default('localhost') }}"
+      port: "{{ kafka_port | default(9092) }}"
+      timeout: 5
+    when: ex_service == "kafka"
 
-- name: Debug the port status
-  debug:
-    var: port_status
+  # MinIO 检测
+  - name: 验证MinIO API访问
+    ansible.builtin.uri:
+      url: "http://{{ ansible_host | default('localhost') }}:{{ minio_port | default(9000) }}/minio/health/live"
+      method: GET
+      return_content: yes
+    when: ex_service == "minio"
+    register: minio_check
+    changed_when: false
+
+  # MongoDB 检测
+  - name: 验证MongoDB连接
+    ansible.builtin.command: >-
+      mongo --host {{ ansible_host | default('localhost') }}
+      --port {{ mongodb_port | default(27017) }}
+      {% if mongodb_user is defined %} -u {{ mongodb_user }} -p {{ mongodb_password }} {% endif %}
+      --eval "db.version()"
+    when: ex_service == "mongodb"
+    no_log: true
+    register: mongodb_check
+    changed_when: false
+
+  # RocketMQ 检测
+  - name: 检查RocketMQ端口
+    ansible.builtin.wait_for:
+      host: "{{ ansible_host | default('localhost') }}"
+      port: "{{ rocketmq_port | default(9876) }}"
+      timeout: 5
+    when: ex_service == "rocketmq"
+
+  # Memcached 检测
+  - name: 测试Memcached连接
+    ansible.builtin.command: >-
+      printf "stats\nquit\n" | nc {{ ansible_host | default('localhost') }} {{ memcached_port | default(11211) }}
+    when: ex_service == "memcached"
+    register: memcached_check
+    changed_when: false
+
+  # Elasticsearch 检测
+  - name: 验证ES基础API
+    ansible.builtin.uri:
+      url: "http://{{ ansible_host | default('localhost') }}:{{ es_port | default(9200) }}/"
+      method: GET
+      return_content: yes
+      status_code: 200
+      body_format: json
+    when: ex_service == "ES"
+    register: es_check
+    changed_when: false
